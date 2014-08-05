@@ -43,7 +43,6 @@ import java.util.logging.Logger;
 import javax.servlet.ServletException;
 
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerFallback;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -86,12 +85,14 @@ import net.sf.json.JSONObject;
 public class FreeStyleMultiBranchProject extends
 		Project<FreeStyleBranchProject, FreeStyleBranchBuild> implements
 		TopLevelItem, ItemGroup<FreeStyleBranchProject>, ViewGroup,
-		StaplerFallback, SCMSourceOwner {
+		SCMSourceOwner {
 
 	private static final String CLASSNAME = FreeStyleMultiBranchProject.class.getName();
 	private static final Logger LOGGER = Logger.getLogger(CLASSNAME);
 
 	private static final String UNUSED = "unused";
+
+	private volatile String syncBranchesCron;
 
 	private volatile SCMSource scmSource;
 
@@ -182,6 +183,13 @@ public class FreeStyleMultiBranchProject extends
 				}
 			}
 		}
+
+		if (syncBranchesCron == null) {
+			// Default: every 5 minutes
+			syncBranchesCron = "H/5 * * * *";
+		}
+
+		// TODO: Do something with the cron!
 
 		// TODO: for testing only -- populate 2 dummy projects if none were loaded
 		//		if (subProjects == null) {
@@ -348,7 +356,6 @@ public class FreeStyleMultiBranchProject extends
 	@Override
 	@Exported
 	public View getPrimaryView() {
-		// TODO: add a way to configure the primary view
 		return viewGroupMixIn.getPrimaryView();
 	}
 
@@ -386,15 +393,56 @@ public class FreeStyleMultiBranchProject extends
 
 	// End ViewGroup implementation
 
+	// Start SCMSourceOwner implementation
+
 	/**
-	 * Default to the primary view when navigating to the project index page.
-	 *
-	 * @return {@link #getPrimaryView()}
+	 * {@inheritDoc}
 	 */
 	@Override
-	public View getStaplerFallback() {
-		return getPrimaryView();
+	@NonNull
+	public List<SCMSource> getSCMSources() {
+		if (scmSource == null) {
+			return Collections.emptyList();
+		}
+		return Arrays.asList(scmSource);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public SCMSource getSCMSource(String sourceId) {
+		return scmSource;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onSCMSourceUpdated(@NonNull SCMSource source) {
+		try {
+			syncBranches();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public SCMSourceCriteria getSCMSourceCriteria(@NonNull SCMSource source) {
+		return new SCMSourceCriteria() {
+			@Override
+			public boolean isHead(@NonNull Probe probe,
+					@NonNull TaskListener listener)
+					throws IOException {
+				return true;
+			}
+		};
+	}
+
+	// End SCMSourceOwner implementation
 
 	/**
 	 * Stapler URL binding for creating views for our branch projects.  Unlike
@@ -475,8 +523,13 @@ public class FreeStyleMultiBranchProject extends
 		super.submit(req, rsp);
 
 		JSONObject json = req.getSubmittedForm();
-		JSONObject scmSourceJson = json.optJSONObject("scmSource");
 
+		syncBranchesCron = json.getString("syncBranchesCron");
+		// TODO: we've got a new cron so do something with it you lazy fool
+
+		primaryView = json.getString("primaryView");
+
+		JSONObject scmSourceJson = json.optJSONObject("scmSource");
 		if (scmSourceJson == null) {
 			scmSource = null;
 		} else {
@@ -488,57 +541,6 @@ public class FreeStyleMultiBranchProject extends
 		}
 	}
 
-	// Start SCMSourceOwner implementation
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	@NonNull
-	public List<SCMSource> getSCMSources() {
-		if (scmSource == null) {
-			return Collections.emptyList();
-		}
-		return Arrays.asList(scmSource);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public SCMSource getSCMSource(String sourceId) {
-		return scmSource;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void onSCMSourceUpdated(@NonNull SCMSource source) {
-		try {
-			syncBranches();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public SCMSourceCriteria getSCMSourceCriteria(@NonNull SCMSource source) {
-		return new SCMSourceCriteria() {
-			@Override
-			public boolean isHead(@NonNull Probe probe,
-					@NonNull TaskListener listener)
-					throws IOException {
-				return true;
-			}
-		};
-	}
-
-	// End SCMSourceOwner implementation
-
 	/**
 	 * Synchronizes the available sub-projects with the available branches and
 	 * updates all sub-project configurations with the configuration specified
@@ -547,6 +549,17 @@ public class FreeStyleMultiBranchProject extends
 	public synchronized void syncBranches() throws IOException {
 		// TODO: Log the fetch and all the other good stuff
 		try {
+			// No SCM to source from, so delete all the branch projects
+			if (scmSource == null) {
+				for (FreeStyleBranchProject project : getSubProjects().values()) {
+					project.delete();
+				}
+
+				getSubProjects().clear();
+
+				return;
+			}
+
 			// Check SCM for branches
 			Set<SCMHead> heads = scmSource.fetch(null);
 
@@ -594,6 +607,17 @@ public class FreeStyleMultiBranchProject extends
 			// TODO: Log properly
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Used by Jelly to populate the Sync Branches Schedule field on the
+	 * configuration page.
+	 *
+	 * @return String - cron
+	 */
+	@SuppressWarnings(UNUSED)
+	public String getSyncBranchesCron() {
+		return syncBranchesCron;
 	}
 
 	/**
@@ -663,7 +687,7 @@ public class FreeStyleMultiBranchProject extends
 	@Initializer(before = InitMilestone.PLUGINS_STARTED)
 	@SuppressWarnings(UNUSED)
 	public static void registerXStream() {
-		Items.XSTREAM.alias("freestyle-multibranch-project",
+		Items.XSTREAM.alias("freestyle-multi-branch-project",
 				FreeStyleMultiBranchProject.class);
 	}
 

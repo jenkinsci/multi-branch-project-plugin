@@ -31,6 +31,7 @@ THE SOFTWARE.
 		 xmlns:st="jelly:stapler"
 		 xmlns:f="/lib/form"
 		 xmlns:p="/lib/hudson/project">
+
 	<p:config-disableBuild/>
 	<p:config-concurrentBuild/>
 
@@ -64,19 +65,36 @@ THE SOFTWARE.
 				<f:textbox
 						checkUrl="'${rootURL}/checkDisplayName?displayName='+encodeURIComponent(this.value)+'&amp;jobName='+encodeURIComponent('${h.jsStringEscape(it.name)}')"/>
 			</f:entry>
+			<f:entry title="Default view" field="defaultView">
+				<select class="setting-input" name="primaryView">
+					<j:forEach var="v" items="${it.views}">
+						<f:option selected="${it.primaryView==v}">
+							${v.viewName}
+						</f:option>
+					</j:forEach>
+				</select>
+			</f:entry>
 		</f:advanced>
 	</f:section>
 
 	<f:section title="${%Source Code Management}">
+		<f:entry title="${%Sync Branches Schedule}" field="syncBranchesCron"
+				 help="/descriptor/hudson.triggers.TimerTrigger/help/spec">
+			<f:textarea default="${it.syncBranchesCron}"
+						checkUrl="'descriptorByName/hudson.triggers.TimerTrigger/checkSpec?value=' + encodeURIComponent(this.value)"/>
+		</f:entry>
+
 		<j:set var="scms"
 			   value="${it.getSCMSourceDescriptors(true)}"/>
 		<j:forEach var="idx" begin="0" end="${size(scms)-1}">
 			<j:set var="descriptor" value="${scms[idx]}"/>
-			<f:radioBlock name="scmSource" value="${idx}" title="${descriptor.displayName}"
+			<f:radioBlock name="scmSource" value="${idx}"
+						  title="${descriptor.displayName}"
 						  checked="${it.getSCMSource(null).descriptor==descriptor}">
 				<j:set var="instance"
 					   value="${it.getSCMSource(null).descriptor==descriptor ? it.getSCMSource(null) : null}"/>
-				<st:include from="${descriptor}" page="${descriptor.configPage}"/>
+				<st:include from="${descriptor}"
+							page="${descriptor.configPage}"/>
 			</f:radioBlock>
 		</j:forEach>
 	</f:section>
