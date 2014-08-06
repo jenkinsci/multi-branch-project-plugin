@@ -90,9 +90,9 @@ THE SOFTWARE.
 			<j:set var="descriptor" value="${scms[idx]}"/>
 			<f:radioBlock name="scmSource" value="${idx}"
 						  title="${descriptor.displayName}"
-						  checked="${it.getSCMSource(null).descriptor==descriptor}">
+						  checked="${it.getSCMSources().get(0).descriptor==descriptor}">
 				<j:set var="instance"
-					   value="${it.getSCMSource(null).descriptor==descriptor ? it.getSCMSource(null) : null}"/>
+					   value="${it.getSCMSources().get(0).descriptor==descriptor ? it.getSCMSources().get(0) : null}"/>
 				<st:include from="${descriptor}"
 							page="${descriptor.configPage}"/>
 			</f:radioBlock>

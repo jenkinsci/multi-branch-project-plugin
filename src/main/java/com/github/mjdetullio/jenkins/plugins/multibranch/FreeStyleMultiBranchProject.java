@@ -26,6 +26,7 @@ package com.github.mjdetullio.jenkins.plugins.multibranch;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,28 +38,38 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.jenkinsci.bytecode.AdaptField;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
+
+import antlr.ANTLRException;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
+import hudson.model.AbstractProject;
 import hudson.model.Action;
-import hudson.model.AsyncPeriodicWork;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
+import hudson.model.JDK;
+import hudson.model.Label;
 import hudson.model.Project;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
@@ -67,10 +78,20 @@ import hudson.model.View;
 import hudson.model.ViewDescriptor;
 import hudson.model.ViewGroup;
 import hudson.model.ViewGroupMixIn;
+import hudson.scm.SCMS;
+import hudson.security.ACL;
+import hudson.tasks.BuildTrigger;
+import hudson.tasks.BuildWrappers;
+import hudson.tasks.Builder;
+import hudson.tasks.Publisher;
+import hudson.triggers.Trigger;
+import hudson.triggers.TriggerDescriptor;
+import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.views.DefaultViewsTabBar;
 import hudson.views.ViewsTabBar;
 import jenkins.model.Jenkins;
+import jenkins.scm.SCMCheckoutStrategy;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
@@ -91,8 +112,18 @@ public class FreeStyleMultiBranchProject extends
 	private static final Logger LOGGER = Logger.getLogger(CLASSNAME);
 
 	private static final String UNUSED = "unused";
+	private static final String DEFAULT_SYNC_SPEC = "H/5 * * * *";
 
-	private volatile String syncBranchesCron;
+	/**
+	 * List of all {@link Trigger}s that will be synced to the sub-projects.
+	 */
+	@AdaptField(was = List.class)
+	protected volatile DescribableList<Trigger<?>, TriggerDescriptor> subProjectTriggers = new DescribableList<Trigger<?>, TriggerDescriptor>(
+			this);
+	private static final AtomicReferenceFieldUpdater<FreeStyleMultiBranchProject, DescribableList> SUB_PROJECT_TRIGGERS_UPDATER =
+			AtomicReferenceFieldUpdater.newUpdater(
+					FreeStyleMultiBranchProject.class, DescribableList.class,
+					"subProjectTriggers");
 
 	private volatile SCMSource scmSource;
 
@@ -184,27 +215,17 @@ public class FreeStyleMultiBranchProject extends
 			}
 		}
 
-		if (syncBranchesCron == null) {
-			// Default: every 5 minutes
-			syncBranchesCron = "H/5 * * * *";
+		// Will check triggers(), add & start default sync cron if not there
+		getSyncBranchesTrigger();
+	}
+
+	@WithBridgeMethods(List.class)
+	protected DescribableList<Trigger<?>, TriggerDescriptor> subProjectTriggers() {
+		if (subProjectTriggers == null) {
+			SUB_PROJECT_TRIGGERS_UPDATER.compareAndSet(this, null,
+					new DescribableList<Trigger<?>, TriggerDescriptor>(this));
 		}
-
-		// TODO: Do something with the cron!
-
-		// TODO: for testing only -- populate 2 dummy projects if none were loaded
-		//		if (subProjects == null) {
-		//			getSubProjects().put("branch1",
-		//					new FreeStyleBranchProject(this, "branch1"));
-		//			getSubProjects().put("branch2",
-		//					new FreeStyleBranchProject(this, "branch2"));
-		//			for (FreeStyleBranchProject project : getSubProjects().values()) {
-		//				try {
-		//					project.save();
-		//				} catch (IOException e) {
-		//					e.printStackTrace();
-		//				}
-		//			}
-		//		}
+		return subProjectTriggers;
 	}
 
 	/**
@@ -260,7 +281,7 @@ public class FreeStyleMultiBranchProject extends
 		return dir;
 	}
 
-	// Start ItemGroup implementation
+	//region ItemGroup implementation
 
 	/**
 	 * {@inheritDoc}
@@ -312,9 +333,9 @@ public class FreeStyleMultiBranchProject extends
 		getSubProjects().remove(item.getName());
 	}
 
-	// End ItemGroup implementation
+	//endregion ItemGroup implementation
 
-	// Start ViewGroup implementation
+	//region ViewGroup implementation
 
 	/**
 	 * {@inheritDoc}
@@ -390,9 +411,9 @@ public class FreeStyleMultiBranchProject extends
 		return Collections.emptyList();
 	}
 
-	// End ViewGroup implementation
+	//endregion ViewGroup implementation
 
-	// Start SCMSourceOwner implementation
+	//region SCMSourceOwner implementation
 
 	/**
 	 * {@inheritDoc}
@@ -410,8 +431,12 @@ public class FreeStyleMultiBranchProject extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	public SCMSource getSCMSource(String sourceId) {
-		return scmSource;
+	@CheckForNull
+	public SCMSource getSCMSource(@CheckForNull String sourceId) {
+		if (scmSource != null && scmSource.getId().equals(sourceId)) {
+			return scmSource;
+		}
+		return null;
 	}
 
 	/**
@@ -419,21 +444,15 @@ public class FreeStyleMultiBranchProject extends
 	 */
 	@Override
 	public void onSCMSourceUpdated(@NonNull SCMSource source) {
-		try {
-			syncBranches();
-		} catch (IOException e) {
-			// TODO
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO
-			e.printStackTrace();
-		}
+		// TODO: notification may be for a new branch that doesn't have a project yet, so trigger build for new projects?
+		getSyncBranchesTrigger().run();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
+	@CheckForNull
 	public SCMSourceCriteria getSCMSourceCriteria(@NonNull SCMSource source) {
 		return new SCMSourceCriteria() {
 			@Override
@@ -445,7 +464,7 @@ public class FreeStyleMultiBranchProject extends
 		};
 	}
 
-	// End SCMSourceOwner implementation
+	//endregion SCMSourceOwner implementation
 
 	/**
 	 * Stapler URL binding for creating views for our branch projects.  Unlike
@@ -515,12 +534,8 @@ public class FreeStyleMultiBranchProject extends
 	public void doConfigSubmit(StaplerRequest req, StaplerResponse rsp)
 			throws ServletException, Descriptor.FormException, IOException {
 		super.doConfigSubmit(req, rsp);
-		try {
-			syncBranches();
-		} catch (InterruptedException e) {
-			// TODO
-			e.printStackTrace();
-		}
+		// TODO run this separately since it can block completion (user redirect) if unable to fetch from repository
+		getSyncBranchesTrigger().run();
 	}
 
 	/**
@@ -529,12 +544,121 @@ public class FreeStyleMultiBranchProject extends
 	@Override
 	protected void submit(StaplerRequest req, StaplerResponse rsp)
 			throws IOException, ServletException, Descriptor.FormException {
-		super.submit(req, rsp);
-
+		/*
+		 * super.submit(req, rsp) is not called because it plays with the
+		 * triggers, which we want this class to handle.  Specifically, we want
+		 * to set triggers so they can be mirrored to the sub-projects, but we
+		 * don't want to start them for this project.  We only want to start the
+		 * SyncBranchesTrigger, whose settings we don't get from the list of
+		 * other triggers.
+		 */
 		JSONObject json = req.getSubmittedForm();
 
-		syncBranchesCron = json.getString("syncBranchesCron");
-		// TODO: we've got a new cron so do something with it you lazy fool
+		//region AbstractProject mirror
+		makeDisabled(req.getParameter("disable") != null);
+
+		JDK jdk = Jenkins.getInstance().getJDK(req.getParameter("jdk"));
+		if (jdk == null) {
+			jdk = new JDK(null, null);
+		}
+		setJDK(jdk);
+		if (req.getParameter("hasCustomQuietPeriod") != null) {
+			setQuietPeriod(Integer.parseInt(req.getParameter("quiet_period")));
+		} else {
+			setQuietPeriod(null);
+		}
+		Integer scmCheckoutRetryCount = null;
+		if (req.getParameter("hasCustomScmCheckoutRetryCount") != null) {
+			scmCheckoutRetryCount = Integer.parseInt(
+					req.getParameter("scmCheckoutRetryCount"));
+		}
+		// Hack to set retry count since it is not exposed from AbstractProject
+		try {
+			Field f = AbstractProject.class.getDeclaredField(
+					"scmCheckoutRetryCount");
+			f.setAccessible(true);
+			f.set(this, scmCheckoutRetryCount);
+		} catch (NoSuchFieldException e) {
+			// TODO
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO
+			e.printStackTrace();
+		}
+		// End hack
+		blockBuildWhenDownstreamBuilding =
+				req.getParameter("blockBuildWhenDownstreamBuilding") != null;
+		blockBuildWhenUpstreamBuilding =
+				req.getParameter("blockBuildWhenUpstreamBuilding") != null;
+
+		if (req.hasParameter("customWorkspace")) {
+			setCustomWorkspace(Util.fixEmptyAndTrim(
+					req.getParameter("customWorkspace.directory")));
+		} else {
+			setCustomWorkspace(null);
+		}
+
+		if (json.has("scmCheckoutStrategy")) {
+			setScmCheckoutStrategy(req.bindJSON(SCMCheckoutStrategy.class,
+					json.getJSONObject("scmCheckoutStrategy")));
+		} else {
+			setScmCheckoutStrategy(null);
+		}
+
+		if (req.getParameter("hasSlaveAffinity") != null) {
+			try {
+				setAssignedLabel(Label.parseExpression(Util.fixEmptyAndTrim(
+						req.getParameter("_.assignedLabelString"))));
+			} catch (ANTLRException e) {
+				// must be old label or host name that includes whitespace or other unsafe chars
+				setAssignedLabel(null);
+			}
+		} else {
+			setAssignedLabel(null);
+		}
+
+		setConcurrentBuild(req.getSubmittedForm().has("concurrentBuild"));
+
+		// BuildAuthorizationToken is deprecated, so authToken is probably ok as null
+		// authToken = BuildAuthorizationToken.create(req);
+
+		setScm(SCMS.parseSCM(req, this));
+
+		// Keep triggers meant for sub-projects in a different list
+		subProjectTriggers().replaceBy(
+				buildDescribable(req, Trigger.for_(this)));
+
+		for (Publisher _t : Descriptor.newInstancesFromHeteroList(req, json,
+				"publisher", Jenkins.getInstance().getExtensionList(
+						BuildTrigger.DescriptorImpl.class))) {
+			BuildTrigger t = (BuildTrigger) _t;
+			List<AbstractProject> childProjects;
+			SecurityContext orig = ACL.impersonate(ACL.SYSTEM);
+			try {
+				childProjects = t.getChildProjects((AbstractProject) this);
+			} finally {
+				SecurityContextHolder.setContext(orig);
+			}
+			for (AbstractProject downstream : childProjects) {
+				downstream.checkPermission(BUILD);
+			}
+		}
+		//endregion AbstractProject mirror
+
+		//region Project mirror
+		getBuildWrappersList().rebuild(req, json, BuildWrappers.getFor(this));
+		getBuildersList().rebuildHetero(req, json, Builder.all(), "builder");
+		getPublishersList().rebuildHetero(req, json, Publisher.all(),
+				"publisher");
+		//endregion Project mirror
+
+		String syncBranchesCron = json.getString("syncBranchesCron");
+		try {
+			restartSyncBranchesTrigger(syncBranchesCron);
+		} catch (ANTLRException e) {
+			throw new IllegalArgumentException(
+					"Failed to instantiate SyncBranchesTrigger", e);
+		}
 
 		primaryView = json.getString("primaryView");
 
@@ -550,12 +674,84 @@ public class FreeStyleMultiBranchProject extends
 		}
 	}
 
+	// TODO doc
+	private synchronized void restartSyncBranchesTrigger(String cronTabSpec)
+			throws IOException, ANTLRException {
+		for (Trigger trigger : triggers()) {
+			trigger.stop();
+		}
+
+		if (cronTabSpec != null) {
+			// triggers() should only have our single SyncBranchesTrigger
+			triggers().clear();
+
+			addTrigger(new SyncBranchesTrigger(cronTabSpec));
+		}
+
+		for (Trigger trigger : triggers()) {
+			//noinspection unchecked
+			trigger.start(this, false);
+		}
+	}
+
+	// TODO doc
+	private synchronized SyncBranchesTrigger getSyncBranchesTrigger() {
+		if (triggers().size() != 1
+				|| !(triggers().get(0) instanceof SyncBranchesTrigger)
+				|| triggers().get(0).getSpec() == null) {
+			// triggers() isn't valid (for us), so let's fix it
+			String spec = DEFAULT_SYNC_SPEC;
+			if (triggers().size() > 1) {
+				for (Trigger trigger : triggers()) {
+					if (trigger instanceof SyncBranchesTrigger
+							&& trigger.getSpec() != null) {
+						spec = trigger.getSpec();
+						break;
+					}
+				}
+			}
+
+			// Errors shouldn't occur here since spec should be valid
+			try {
+				restartSyncBranchesTrigger(spec);
+			} catch (IOException e) {
+				LOGGER.log(Level.WARNING,
+						"Failed to add trigger SyncBranchesTrigger", e);
+			} catch (ANTLRException e) {
+				LOGGER.log(Level.WARNING,
+						"Failed to instantiate SyncBranchesTrigger", e);
+			}
+		}
+
+		return (SyncBranchesTrigger) triggers().get(0);
+	}
+
+	/**
+	 * Synchronizes the available sub-projects by checking if the project is
+	 * disabled, then calling {@link #_syncBranches(TaskListener)} and logging
+	 * its exceptions to the listener.
+	 */
+	public synchronized void syncBranches(TaskListener listener) {
+		if (!isBuildable()) {
+			listener.getLogger().println("Project disabled.");
+			return;
+		}
+
+		try {
+			_syncBranches(listener);
+		} catch (InterruptedException e) {
+			e.printStackTrace(listener.fatalError(e.getMessage()));
+		} catch (IOException e) {
+			e.printStackTrace(listener.fatalError(e.getMessage()));
+		}
+	}
+
 	/**
 	 * Synchronizes the available sub-projects with the available branches and
 	 * updates all sub-project configurations with the configuration specified
 	 * by this project.
 	 */
-	public synchronized void syncBranches()
+	private synchronized void _syncBranches(TaskListener listener)
 			throws IOException, InterruptedException {
 		// TODO: This method is a mess
 		// TODO: Log the fetch and all the other good stuff
@@ -572,14 +768,14 @@ public class FreeStyleMultiBranchProject extends
 		}
 
 		// Check SCM for branches
-		Set<SCMHead> heads = scmSource.fetch(null);
+		Set<SCMHead> heads = scmSource.fetch(listener);
 
 		// TODO: look at name encode/decode, test branch names with odd characters
-			/*
-			 * Rather than creating a new Map for subProjects and swapping with
-			 * the old one, always use getSubProjects() so synchronization is
-			 * maintained.
-			 */
+		/*
+		 * Rather than creating a new Map for subProjects and swapping with
+		 * the old one, always use getSubProjects() so synchronization is
+		 * maintained.
+		 */
 		Map<String, SCMHead> branches = new HashMap<String, SCMHead>();
 		for (SCMHead head : heads) {
 			String branchName = head.getName();
@@ -606,11 +802,23 @@ public class FreeStyleMultiBranchProject extends
 		// Sync config for existing branch projects
 		// TODO: Finish
 		for (FreeStyleBranchProject project : getSubProjects().values()) {
+			/*
+			 * Copy the settings to the projects already in memory.  Everything
+			 * is set by reference, so all the child projects will get the same
+			 * objects.  We don't want this.
+			 */
 			project.setScm(scmSource.build(branches.get(project.getName())));
+			// project.getTriggersList().replaceBy(subProjectTriggers());
 			project.getBuildWrappersList().replaceBy(getBuildWrappersList());
 			project.getBuildersList().replaceBy(getBuildersList());
 			project.getPublishersList().replaceBy(getPublishersList());
+
+			// Save configuration to file
 			project.save();
+
+			// Reload from file so new objects get created for each project
+			// TODO: does not work, find solution
+			project.getConfigFile().unmarshal(project);
 		}
 	}
 
@@ -622,7 +830,7 @@ public class FreeStyleMultiBranchProject extends
 	 */
 	@SuppressWarnings(UNUSED)
 	public String getSyncBranchesCron() {
-		return syncBranchesCron;
+		return getSyncBranchesTrigger().getSpec();
 	}
 
 	/**
@@ -648,45 +856,6 @@ public class FreeStyleMultiBranchProject extends
 	}
 
 	/**
-	 * A periodic thread that runs {@link #syncBranches()} on each project of
-	 * this type. <p/> Automatically registered on start-up by Jenkins.
-	 * Recurrence cannot be adjusted after start-up.
-	 */
-	@Extension
-	@SuppressWarnings(UNUSED)
-	public static class SyncBranchesThread extends AsyncPeriodicWork {
-		/**
-		 * Constructor for this thread that specifies the thread name.  Logs are
-		 * output to a file of the same name.
-		 */
-		public SyncBranchesThread() {
-			super("SyncBranchesThread");
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public long getRecurrencePeriod() {
-			// TODO: Make recurrence configurable, possibly with a cron setting.
-			// TODO: WARNING - runtime may eventually exceed recurrence of 5 minutes
-			return 5 * MIN;
-		}
-
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		protected void execute(TaskListener listener)
-				throws IOException, InterruptedException {
-			for (FreeStyleMultiBranchProject project : Jenkins.getInstance().getAllItems(
-					FreeStyleMultiBranchProject.class)) {
-				project.syncBranches();
-			}
-		}
-	}
-
-	/**
 	 * Gives this class an alias for configuration XML.
 	 */
 	@Initializer(before = InitMilestone.PLUGINS_STARTED)
@@ -698,7 +867,7 @@ public class FreeStyleMultiBranchProject extends
 
 	/**
 	 * Returns a list of SCMSourceDescriptors that we want to use for this
-	 * project type.
+	 * project type.  Used by configure-entries.jelly.
 	 */
 	public static List<SCMSourceDescriptor> getSCMSourceDescriptors(
 			boolean onlyUserInstantiable) {
@@ -720,6 +889,10 @@ public class FreeStyleMultiBranchProject extends
 		return descriptors;
 	}
 
+	/**
+	 * Returns a list of ViewDescriptors that we want to use for this project
+	 * type.  Used by newView.jelly.
+	 */
 	public static List<ViewDescriptor> getViewDescriptors() {
 		return Arrays.asList(
 				(ViewDescriptor) Jenkins.getInstance().getDescriptorByType(
