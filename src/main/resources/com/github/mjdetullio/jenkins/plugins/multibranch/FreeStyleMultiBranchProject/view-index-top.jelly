@@ -1,8 +1,7 @@
 <!--
 The MIT License
 
-Copyright (c) 2004-2014, Sun Microsystems, Inc., Kohsuke Kawaguchi,
-id:cactusman, Yahoo! Inc., Matthew DeTullio
+Copyright (c) 2014 Matthew DeTullio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,21 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
-
-<!--
-  New View page
--->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
-	<l:layout norefresh="true" permission="${it.CONFIGURE}"
-			  title="${%New View}">
-		<st:include page="sidepanel.jelly"/>
-
-		<l:main-panel>
-			<j:set var="views" value="${it.getViewDescriptors()}"/>
-			<n:form nameTitle="${%View name}" action="createView"
-					descriptors="${views}" checkUrl="viewExistsCheck"
-					xmlns:n="/lib/hudson/newFromList"/>
-		</l:main-panel>
-	</l:layout>
+<j:jelly xmlns:j="jelly:core"
+		 xmlns:t="/lib/hudson">
+	<h1>${it.pronoun} ${it.displayName}</h1>
+	<j:if test="${it.name!=it.displayName}">
+		${%Project name}: ${it.fullName}
+	</j:if>
+	<t:editableDescription permission="${it.CONFIGURE}"/>
 </j:jelly>

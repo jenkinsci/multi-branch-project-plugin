@@ -59,12 +59,12 @@ import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
-import hudson.model.ListView;
 import hudson.model.Project;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
 import hudson.model.TopLevelItemDescriptor;
 import hudson.model.View;
+import hudson.model.ViewDescriptor;
 import hudson.model.ViewGroup;
 import hudson.model.ViewGroupMixIn;
 import hudson.util.FormValidation;
@@ -138,7 +138,7 @@ public class FreeStyleMultiBranchProject extends
 			views = new CopyOnWriteArrayList<View>();
 		}
 		if (views.size() == 0) {
-			ListView listView = new ListView("All", this);
+			BranchListView listView = new BranchListView("All", this);
 			views.add(listView);
 			listView.setIncludeRegex(".*");
 			try {
@@ -300,8 +300,8 @@ public class FreeStyleMultiBranchProject extends
 	@Override
 	public void onRenamed(FreeStyleBranchProject item, String oldName,
 			String newName) {
-		// Branch projects should only be created and deleted, never renamed
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException(
+				"Renaming sub-projects is not supported.  They should only be added or deleted.");
 	}
 
 	/**
@@ -309,8 +309,7 @@ public class FreeStyleMultiBranchProject extends
 	 */
 	@Override
 	public void onDeleted(FreeStyleBranchProject item) {
-		// TODO: More work here required?
-		getSubProjects().remove(item);
+		getSubProjects().remove(item.getName());
 	}
 
 	// End ItemGroup implementation
@@ -547,6 +546,7 @@ public class FreeStyleMultiBranchProject extends
 	 * by this project.
 	 */
 	public synchronized void syncBranches() throws IOException {
+		// TODO: This method is a mess
 		// TODO: Log the fetch and all the other good stuff
 		try {
 			// No SCM to source from, so delete all the branch projects
@@ -713,5 +713,11 @@ public class FreeStyleMultiBranchProject extends
 		}
 
 		return descriptors;
+	}
+
+	public static List<ViewDescriptor> getViewDescriptors() {
+		return Arrays.asList(
+				(ViewDescriptor) Jenkins.getInstance().getDescriptorByType(
+						BranchListView.DescriptorImpl.class));
 	}
 }

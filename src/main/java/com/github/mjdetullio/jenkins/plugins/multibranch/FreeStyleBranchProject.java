@@ -23,8 +23,11 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
+import java.io.IOException;
+
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import hudson.DescriptorExtensionList;
@@ -86,7 +89,34 @@ public class FreeStyleBranchProject
 	@Override
 	@RequirePOST
 	public void doDoRename(StaplerRequest req, StaplerResponse rsp) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException(
+				"Renaming sub-projects is not supported.  They should only be added or deleted.");
+	}
+
+	/**
+	 * Disables configuring of this project type via Stapler. <p/> Inherited
+	 * docs: <p/> {@inheritDoc}
+	 */
+	@Override
+	@RequirePOST
+	public void doConfigSubmit(StaplerRequest req, StaplerResponse rsp) {
+		throw new UnsupportedOperationException(
+				"This sub-project configuration cannot be edited directly.");
+	}
+
+	/**
+	 * Disables configuring of this project type via Stapler. <p/> Inherited
+	 * docs: <p/> {@inheritDoc}
+	 */
+	@WebMethod(name = "config.xml")
+	public void doConfigDotXml(StaplerRequest req, StaplerResponse rsp)
+			throws IOException {
+		if (req.getMethod().equals("POST")) {
+			// submission
+			throw new UnsupportedOperationException(
+					"This sub-project configuration cannot be edited directly.");
+		}
+		super.doConfigDotXml(req, rsp);
 	}
 
 	/**

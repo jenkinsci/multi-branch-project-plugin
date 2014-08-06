@@ -21,21 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
-
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
-		 xmlns:l="/lib/layout" xmlns:t="/lib/hudson">
+		 xmlns:l="/lib/layout">
 	<l:layout title="${it.displayName}">
 		<st:include page="sidepanel.jelly"/>
 		<l:main-panel>
-			<h1>${it.pronoun} ${it.displayName}</h1>
-			<j:if test="${it.name!=it.displayName}">
-				${%Project name}: ${it.fullName}
-			</j:if>
-			<t:editableDescription permission="${it.CONFIGURE}"/>
+			<st:include page="view-index-top.jelly" optional="true"/>
 
-			<!-- inject main part here -->
-			<st:include page="main.jelly"/>
+			<j:set var="items" value="${it.primaryView.items}"/>
+			<st:include page="main.jelly" it="${it.primaryView}"/>
 		</l:main-panel>
 	</l:layout>
 </j:jelly>
