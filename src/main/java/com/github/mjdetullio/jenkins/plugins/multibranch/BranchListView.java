@@ -90,7 +90,8 @@ public class BranchListView extends ListView {
 	 */
 	@SuppressWarnings(UNUSED)
 	public final void doNewJob() {
-		throw new UnsupportedOperationException("New jobs cannot be created for this project directly.");
+		throw new UnsupportedOperationException(
+				"New jobs cannot be created for this project directly.");
 	}
 
 	/**
@@ -98,7 +99,8 @@ public class BranchListView extends ListView {
 	 */
 	@SuppressWarnings(UNUSED)
 	public final void doCreateItem() {
-		throw new UnsupportedOperationException("New jobs cannot be created for this project directly.");
+		throw new UnsupportedOperationException(
+				"New jobs cannot be created for this project directly.");
 	}
 
 	/**
@@ -107,7 +109,13 @@ public class BranchListView extends ListView {
 	 */
 	@Extension
 	public static class DescriptorImpl extends ListView.DescriptorImpl {
-		// Intentionally empty
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public boolean isInstantiable() {
+			return false;
+		}
 	}
 
 	/**
