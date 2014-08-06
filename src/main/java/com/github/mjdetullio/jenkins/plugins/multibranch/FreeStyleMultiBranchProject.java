@@ -422,6 +422,10 @@ public class FreeStyleMultiBranchProject extends
 		try {
 			syncBranches();
 		} catch (IOException e) {
+			// TODO
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO
 			e.printStackTrace();
 		}
 	}
@@ -507,10 +511,16 @@ public class FreeStyleMultiBranchProject extends
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void doConfigSubmit(StaplerRequest req, StaplerResponse rsp)
 			throws ServletException, Descriptor.FormException, IOException {
 		super.doConfigSubmit(req, rsp);
-		syncBranches();
+		try {
+			syncBranches();
+		} catch (InterruptedException e) {
+			// TODO
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -545,67 +555,62 @@ public class FreeStyleMultiBranchProject extends
 	 * updates all sub-project configurations with the configuration specified
 	 * by this project.
 	 */
-	public synchronized void syncBranches() throws IOException {
+	public synchronized void syncBranches()
+			throws IOException, InterruptedException {
 		// TODO: This method is a mess
 		// TODO: Log the fetch and all the other good stuff
-		try {
-			// No SCM to source from, so delete all the branch projects
-			if (scmSource == null) {
-				for (FreeStyleBranchProject project : getSubProjects().values()) {
-					project.delete();
-				}
 
-				getSubProjects().clear();
-
-				return;
+		// No SCM to source from, so delete all the branch projects
+		if (scmSource == null) {
+			for (FreeStyleBranchProject project : getSubProjects().values()) {
+				project.delete();
 			}
 
-			// Check SCM for branches
-			Set<SCMHead> heads = scmSource.fetch(null);
+			getSubProjects().clear();
 
-			// TODO: look at name encode/decode, test branch names with odd characters
+			return;
+		}
+
+		// Check SCM for branches
+		Set<SCMHead> heads = scmSource.fetch(null);
+
+		// TODO: look at name encode/decode, test branch names with odd characters
 			/*
 			 * Rather than creating a new Map for subProjects and swapping with
 			 * the old one, always use getSubProjects() so synchronization is
 			 * maintained.
 			 */
-			Map<String, SCMHead> branches = new HashMap<String, SCMHead>();
-			for (SCMHead head : heads) {
-				String branchName = head.getName();
-				branches.put(branchName, head);
+		Map<String, SCMHead> branches = new HashMap<String, SCMHead>();
+		for (SCMHead head : heads) {
+			String branchName = head.getName();
+			branches.put(branchName, head);
 
-				if (!getSubProjects().containsKey(branchName)) {
-					// Add new projects
-					getSubProjects().put(branchName,
-							new FreeStyleBranchProject(this, branchName));
-				}
+			if (!getSubProjects().containsKey(branchName)) {
+				// Add new projects
+				getSubProjects().put(branchName,
+						new FreeStyleBranchProject(this, branchName));
 			}
+		}
 
-			// Delete all the sub-projects for branches that no longer exist
-			Iterator<Map.Entry<String, FreeStyleBranchProject>> iter = getSubProjects().entrySet().iterator();
-			while (iter.hasNext()) {
-				Map.Entry<String, FreeStyleBranchProject> entry = iter.next();
+		// Delete all the sub-projects for branches that no longer exist
+		Iterator<Map.Entry<String, FreeStyleBranchProject>> iter = getSubProjects().entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String, FreeStyleBranchProject> entry = iter.next();
 
-				if (!branches.containsKey(entry.getKey())) {
-					iter.remove();
-					entry.getValue().delete();
-				}
+			if (!branches.containsKey(entry.getKey())) {
+				iter.remove();
+				entry.getValue().delete();
 			}
+		}
 
-			// Sync config for existing branch projects
-			// TODO: Finish
-			for (FreeStyleBranchProject project : getSubProjects().values()) {
-				project.setScm(
-						scmSource.build(branches.get(project.getName())));
-				project.getBuildWrappersList().replaceBy(
-						getBuildWrappersList());
-				project.getBuildersList().replaceBy(getBuildersList());
-				project.getPublishersList().replaceBy(getPublishersList());
-				project.save();
-			}
-		} catch (InterruptedException e) {
-			// TODO: Log properly
-			e.printStackTrace();
+		// Sync config for existing branch projects
+		// TODO: Finish
+		for (FreeStyleBranchProject project : getSubProjects().values()) {
+			project.setScm(scmSource.build(branches.get(project.getName())));
+			project.getBuildWrappersList().replaceBy(getBuildWrappersList());
+			project.getBuildersList().replaceBy(getBuildersList());
+			project.getPublishersList().replaceBy(getPublishersList());
+			project.save();
 		}
 	}
 
