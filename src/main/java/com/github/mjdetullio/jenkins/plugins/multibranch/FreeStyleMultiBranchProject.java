@@ -26,19 +26,23 @@ package com.github.mjdetullio.jenkins.plugins.multibranch;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,29 +50,31 @@ import javax.servlet.ServletException;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.jenkinsci.bytecode.AdaptField;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
-
 import antlr.ANTLRException;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
+import hudson.XmlFile;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.BuildAuthorizationToken;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.JDK;
+import hudson.model.Job;
+import hudson.model.JobProperty;
+import hudson.model.JobPropertyDescriptor;
 import hudson.model.Label;
 import hudson.model.Project;
 import hudson.model.TaskListener;
@@ -78,6 +84,7 @@ import hudson.model.View;
 import hudson.model.ViewDescriptor;
 import hudson.model.ViewGroup;
 import hudson.model.ViewGroupMixIn;
+import hudson.model.listeners.ItemListener;
 import hudson.scm.SCMS;
 import hudson.security.ACL;
 import hudson.tasks.BuildTrigger;
@@ -85,12 +92,15 @@ import hudson.tasks.BuildWrappers;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
 import hudson.triggers.Trigger;
-import hudson.triggers.TriggerDescriptor;
 import hudson.util.DescribableList;
+import hudson.util.FormApply;
 import hudson.util.FormValidation;
 import hudson.views.DefaultViewsTabBar;
 import hudson.views.ViewsTabBar;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import jenkins.model.BuildDiscarder;
 import jenkins.model.Jenkins;
+import jenkins.model.ProjectNamingStrategy;
 import jenkins.scm.SCMCheckoutStrategy;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
@@ -98,6 +108,7 @@ import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.impl.SingleSCMSource;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
 /**
@@ -114,18 +125,9 @@ public class FreeStyleMultiBranchProject extends
 	private static final String UNUSED = "unused";
 	private static final String DEFAULT_SYNC_SPEC = "H/5 * * * *";
 
-	/**
-	 * List of all {@link Trigger}s that will be synced to the sub-projects.
-	 */
-	@AdaptField(was = List.class)
-	protected volatile DescribableList<Trigger<?>, TriggerDescriptor> subProjectTriggers = new DescribableList<Trigger<?>, TriggerDescriptor>(
-			this);
-	private static final AtomicReferenceFieldUpdater<FreeStyleMultiBranchProject, DescribableList> SUB_PROJECT_TRIGGERS_UPDATER =
-			AtomicReferenceFieldUpdater.newUpdater(
-					FreeStyleMultiBranchProject.class, DescribableList.class,
-					"subProjectTriggers");
-
 	private volatile SCMSource scmSource;
+
+	private transient FreeStyleBranchProject templateProject;
 
 	private transient Map<String, FreeStyleBranchProject> subProjects;
 
@@ -197,6 +199,21 @@ public class FreeStyleMultiBranchProject extends
 			}
 		};
 
+		File templateDir = new File(getRootDir(), "template");
+		try {
+			if (!(new File(templateDir, "config.xml").isFile())) {
+				templateProject = new FreeStyleBranchProject(this, "template");
+			} else {
+				templateProject = (FreeStyleBranchProject) Items.load(this,
+						templateDir);
+			}
+			templateProject.setIsTemplate(true);
+			templateProject.disable();
+		} catch (IOException e) {
+			LOGGER.log(Level.WARNING,
+					"Failed to load template project " + templateDir, e);
+		}
+
 		if (getBranchesDir().isDirectory()) {
 			for (File branch : getBranchesDir().listFiles(new FileFilter() {
 				public boolean accept(File pathname) {
@@ -217,15 +234,6 @@ public class FreeStyleMultiBranchProject extends
 
 		// Will check triggers(), add & start default sync cron if not there
 		getSyncBranchesTrigger();
-	}
-
-	@WithBridgeMethods(List.class)
-	protected DescribableList<Trigger<?>, TriggerDescriptor> subProjectTriggers() {
-		if (subProjectTriggers == null) {
-			SUB_PROJECT_TRIGGERS_UPDATER.compareAndSet(this, null,
-					new DescribableList<Trigger<?>, TriggerDescriptor>(this));
-		}
-		return subProjectTriggers;
 	}
 
 	/**
@@ -254,6 +262,14 @@ public class FreeStyleMultiBranchProject extends
 	@Override
 	protected Class<FreeStyleBranchBuild> getBuildClass() {
 		return FreeStyleBranchBuild.class;
+	}
+
+	/**
+	 * Retrieves the template sub-project.  Used by configure-entries.jelly.
+	 */
+	@SuppressWarnings(UNUSED)
+	public FreeStyleBranchProject getTemplateProject() {
+		return templateProject;
 	}
 
 	/**
@@ -312,6 +328,9 @@ public class FreeStyleMultiBranchProject extends
 	 */
 	@Override
 	public File getRootDirFor(FreeStyleBranchProject child) {
+		if (child.isTemplate()) {
+			return new File(getRootDir(), Util.rawEncode(child.getName()));
+		}
 		return new File(getBranchesDir(), Util.rawEncode(child.getName()));
 	}
 
@@ -466,6 +485,10 @@ public class FreeStyleMultiBranchProject extends
 
 	//endregion SCMSourceOwner implementation
 
+	public SCMSource getSCMSource() {
+		return scmSource;
+	}
+
 	/**
 	 * Stapler URL binding for creating views for our branch projects.  Unlike
 	 * normal views, this only requires permission to configure the project, not
@@ -533,7 +556,127 @@ public class FreeStyleMultiBranchProject extends
 	@Override
 	public void doConfigSubmit(StaplerRequest req, StaplerResponse rsp)
 			throws ServletException, Descriptor.FormException, IOException {
-		super.doConfigSubmit(req, rsp);
+		//region Job mirror
+		checkPermission(CONFIGURE);
+
+		description = req.getParameter("description");
+
+		boolean keepDependencies = req.getParameter("keepDependencies") != null;
+		// Hack to set keepDependencies since it is not exposed
+		try {
+			Field f = Job.class.getDeclaredField("keepDependencies");
+			f.setAccessible(true);
+			f.set(templateProject, keepDependencies);
+		} catch (Throwable e) {
+			LOGGER.log(Level.WARNING, "Unable to set keepDependencies", e);
+		}
+		// End hack
+
+		try {
+			JSONObject json = req.getSubmittedForm();
+
+			setDisplayName(json.optString("displayNameOrNull"));
+
+			if (json.optBoolean("logrotate")) {
+				templateProject.setBuildDiscarder(
+						req.bindJSON(BuildDiscarder.class,
+								json.optJSONObject("buildDiscarder")));
+			} else {
+				templateProject.setBuildDiscarder(null);
+			}
+
+			DescribableList<JobProperty<?>, JobPropertyDescriptor> t = new DescribableList<JobProperty<?>, JobPropertyDescriptor>(
+					NOOP, getAllProperties());
+			t.rebuild(req, json.optJSONObject("properties"),
+					JobPropertyDescriptor.getPropertyDescriptors(
+							this.getClass()));
+			templateProject.getProperties().clear();
+			for (JobProperty p : t) {
+				// Hack to set property owner since it is not exposed
+				// p.setOwner(this)
+				try {
+					Field f = JobProperty.class.getDeclaredField(
+							"owner");
+					f.setAccessible(true);
+					f.set(p, templateProject);
+				} catch (Throwable e) {
+					LOGGER.log(Level.WARNING,
+							"Unable to set job property owner", e);
+				}
+				// End hack
+
+				//noinspection unchecked
+				templateProject.addProperty(p);
+			}
+
+			submit(req, rsp);
+
+			templateProject.save();
+			save();
+			ItemListener.fireOnUpdated(templateProject);
+			// TODO could this be used to trigger syncBranches()?
+			ItemListener.fireOnUpdated(this);
+
+			String newName = req.getParameter("name");
+			final ProjectNamingStrategy namingStrategy = Jenkins.getInstance().getProjectNamingStrategy();
+			if (newName != null && !newName.equals(name)) {
+				// check this error early to avoid HTTP response splitting.
+				Jenkins.checkGoodName(newName);
+				namingStrategy.checkName(newName);
+				rsp.sendRedirect("rename?newName=" + URLEncoder.encode(newName,
+						"UTF-8"));
+			} else {
+				if (namingStrategy.isForceExistingJobs()) {
+					namingStrategy.checkName(name);
+				}
+				//noinspection ThrowableResultOfMethodCallIgnored
+				FormApply.success(".").generateResponse(req, rsp, null);
+			}
+		} catch (JSONException e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			pw.println(
+					"Failed to parse form data. Please report this problem as a bug");
+			pw.println("JSON=" + req.getSubmittedForm());
+			pw.println();
+			e.printStackTrace(pw);
+
+			rsp.setStatus(SC_BAD_REQUEST);
+			sendError(sw.toString(), req, rsp, true);
+		}
+		//endregion Job mirror
+
+		//region AbstractProject mirror
+		updateTransientActions();
+
+		// TODO: does this even?
+		Set<AbstractProject> upstream = Collections.emptySet();
+		if (req.getParameter("pseudoUpstreamTrigger") != null) {
+			upstream = new HashSet<AbstractProject>(
+					Items.fromNameList(getParent(),
+							req.getParameter("upstreamProjects"),
+							AbstractProject.class));
+		}
+
+		// Hack to execute method convertUpstreamBuildTrigger(upstream);
+		try {
+			Method m = AbstractProject.class.getDeclaredMethod(
+					"convertUpstreamBuildTrigger", Set.class);
+			m.setAccessible(true);
+			m.invoke(templateProject, upstream);
+		} catch (Throwable e) {
+			LOGGER.log(Level.WARNING,
+					"Unable to execute convertUpstreamBuildTrigger(Set)", e);
+		}
+		// End hack
+
+		// notify the queue as the project might be now tied to different node
+		Jenkins.getInstance().getQueue().scheduleMaintenance();
+
+		// this is to reflect the upstream build adjustments done above
+		Jenkins.getInstance().rebuildDependencyGraphAsync();
+		//endregion AbstractProject mirror
+
 		// TODO run this separately since it can block completion (user redirect) if unable to fetch from repository
 		getSyncBranchesTrigger().run();
 	}
@@ -561,71 +704,81 @@ public class FreeStyleMultiBranchProject extends
 		if (jdk == null) {
 			jdk = new JDK(null, null);
 		}
-		setJDK(jdk);
+		templateProject.setJDK(jdk);
 		if (req.getParameter("hasCustomQuietPeriod") != null) {
-			setQuietPeriod(Integer.parseInt(req.getParameter("quiet_period")));
+			templateProject.setQuietPeriod(
+					Integer.parseInt(req.getParameter("quiet_period")));
 		} else {
-			setQuietPeriod(null);
+			templateProject.setQuietPeriod(null);
 		}
 		Integer scmCheckoutRetryCount = null;
 		if (req.getParameter("hasCustomScmCheckoutRetryCount") != null) {
 			scmCheckoutRetryCount = Integer.parseInt(
 					req.getParameter("scmCheckoutRetryCount"));
 		}
-		// Hack to set retry count since it is not exposed from AbstractProject
+		// Hack to set retry count since it is not exposed
 		try {
 			Field f = AbstractProject.class.getDeclaredField(
 					"scmCheckoutRetryCount");
 			f.setAccessible(true);
-			f.set(this, scmCheckoutRetryCount);
-		} catch (NoSuchFieldException e) {
-			// TODO
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO
-			e.printStackTrace();
+			f.set(templateProject, scmCheckoutRetryCount);
+		} catch (Throwable e) {
+			LOGGER.log(Level.WARNING, "Unable to set scmCheckoutRetryCount", e);
 		}
 		// End hack
-		blockBuildWhenDownstreamBuilding =
-				req.getParameter("blockBuildWhenDownstreamBuilding") != null;
-		blockBuildWhenUpstreamBuilding =
-				req.getParameter("blockBuildWhenUpstreamBuilding") != null;
+		templateProject.setBlockBuildWhenDownstreamBuilding(
+				req.getParameter("blockBuildWhenDownstreamBuilding") != null);
+		templateProject.setBlockBuildWhenUpstreamBuilding(
+				req.getParameter("blockBuildWhenUpstreamBuilding") != null);
 
 		if (req.hasParameter("customWorkspace")) {
-			setCustomWorkspace(Util.fixEmptyAndTrim(
+			templateProject.setCustomWorkspace(Util.fixEmptyAndTrim(
 					req.getParameter("customWorkspace.directory")));
 		} else {
-			setCustomWorkspace(null);
+			templateProject.setCustomWorkspace(null);
 		}
 
 		if (json.has("scmCheckoutStrategy")) {
-			setScmCheckoutStrategy(req.bindJSON(SCMCheckoutStrategy.class,
-					json.getJSONObject("scmCheckoutStrategy")));
+			templateProject.setScmCheckoutStrategy(
+					req.bindJSON(SCMCheckoutStrategy.class,
+							json.getJSONObject("scmCheckoutStrategy")));
 		} else {
-			setScmCheckoutStrategy(null);
+			templateProject.setScmCheckoutStrategy(null);
 		}
 
 		if (req.getParameter("hasSlaveAffinity") != null) {
 			try {
-				setAssignedLabel(Label.parseExpression(Util.fixEmptyAndTrim(
-						req.getParameter("_.assignedLabelString"))));
+				templateProject.setAssignedLabel(
+						Label.parseExpression(Util.fixEmptyAndTrim(
+								req.getParameter("_.assignedLabelString"))));
 			} catch (ANTLRException e) {
 				// must be old label or host name that includes whitespace or other unsafe chars
-				setAssignedLabel(null);
+				templateProject.setAssignedLabel(null);
 			}
 		} else {
-			setAssignedLabel(null);
+			templateProject.setAssignedLabel(null);
 		}
 
-		setConcurrentBuild(req.getSubmittedForm().has("concurrentBuild"));
+		templateProject.setConcurrentBuild(
+				req.getSubmittedForm().has("concurrentBuild"));
 
-		// BuildAuthorizationToken is deprecated, so authToken is probably ok as null
-		// authToken = BuildAuthorizationToken.create(req);
+		//noinspection deprecation
+		BuildAuthorizationToken authToken = BuildAuthorizationToken.create(req);
+		// Hack to set auth token since it is not exposed
+		try {
+			Field f = AbstractProject.class.getDeclaredField(
+					"authToken");
+			f.setAccessible(true);
+			f.set(templateProject, authToken);
+		} catch (Throwable e) {
+			LOGGER.log(Level.WARNING, "Unable to set scmCheckoutRetryCount", e);
+		}
+		// End hack
 
-		setScm(SCMS.parseSCM(req, this));
+		templateProject.setScm(SCMS.parseSCM(req, this));
 
 		// Keep triggers meant for sub-projects in a different list
-		subProjectTriggers().replaceBy(
+		templateProject.getTriggersList().replaceBy(
 				buildDescribable(req, Trigger.for_(this)));
 
 		for (Publisher _t : Descriptor.newInstancesFromHeteroList(req, json,
@@ -646,9 +799,12 @@ public class FreeStyleMultiBranchProject extends
 		//endregion AbstractProject mirror
 
 		//region Project mirror
-		getBuildWrappersList().rebuild(req, json, BuildWrappers.getFor(this));
-		getBuildersList().rebuildHetero(req, json, Builder.all(), "builder");
-		getPublishersList().rebuildHetero(req, json, Publisher.all(),
+		templateProject.getBuildWrappersList().rebuild(req, json,
+				BuildWrappers.getFor(this));
+		templateProject.getBuildersList().rebuildHetero(req, json,
+				Builder.all(), "builder");
+		templateProject.getPublishersList().rebuildHetero(req, json,
+				Publisher.all(),
 				"publisher");
 		//endregion Project mirror
 
@@ -674,7 +830,11 @@ public class FreeStyleMultiBranchProject extends
 		}
 	}
 
-	// TODO doc
+	/**
+	 * Stops all triggers, then if a non-null spec is given clears all triggers
+	 * and creates a new {@link SyncBranchesTrigger} from the spec, and finally
+	 * starts all triggers.
+	 */
 	private synchronized void restartSyncBranchesTrigger(String cronTabSpec)
 			throws IOException, ANTLRException {
 		for (Trigger trigger : triggers()) {
@@ -694,7 +854,13 @@ public class FreeStyleMultiBranchProject extends
 		}
 	}
 
-	// TODO doc
+	/**
+	 * Checks the validity of the triggers associated with this project (there
+	 * should always be one trigger of type {@link SyncBranchesTrigger}),
+	 * corrects it if necessary, and returns the trigger.
+	 *
+	 * @return SyncBranchesTrigger that is non-null and valid
+	 */
 	private synchronized SyncBranchesTrigger getSyncBranchesTrigger() {
 		if (triggers().size() != 1
 				|| !(triggers().get(0) instanceof SyncBranchesTrigger)
@@ -739,9 +905,7 @@ public class FreeStyleMultiBranchProject extends
 
 		try {
 			_syncBranches(listener);
-		} catch (InterruptedException e) {
-			e.printStackTrace(listener.fatalError(e.getMessage()));
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			e.printStackTrace(listener.fatalError(e.getMessage()));
 		}
 	}
@@ -753,13 +917,18 @@ public class FreeStyleMultiBranchProject extends
 	 */
 	private synchronized void _syncBranches(TaskListener listener)
 			throws IOException, InterruptedException {
-		// TODO: This method is a mess
-		// TODO: Log the fetch and all the other good stuff
-
 		// No SCM to source from, so delete all the branch projects
 		if (scmSource == null) {
+			listener.getLogger().println("SCM not selected.");
+
 			for (FreeStyleBranchProject project : getSubProjects().values()) {
-				project.delete();
+				listener.getLogger().println(
+						"Deleting project for branch " + project.getName());
+				try {
+					project.delete();
+				} catch (Throwable e) {
+					e.printStackTrace(listener.fatalError(e.getMessage()));
+				}
 			}
 
 			getSubProjects().clear();
@@ -770,7 +939,10 @@ public class FreeStyleMultiBranchProject extends
 		// Check SCM for branches
 		Set<SCMHead> heads = scmSource.fetch(listener);
 
-		// TODO: look at name encode/decode, test branch names with odd characters
+		/*
+		 * TODO: look at name encode/decode, test branch names with odd characters
+		 * -- needed for directory, might be entirely handled by getRootDirFor() and nothing more would be required
+		 */
 		/*
 		 * Rather than creating a new Map for subProjects and swapping with
 		 * the old one, always use getSubProjects() so synchronization is
@@ -783,8 +955,18 @@ public class FreeStyleMultiBranchProject extends
 
 			if (!getSubProjects().containsKey(branchName)) {
 				// Add new projects
-				getSubProjects().put(branchName,
-						new FreeStyleBranchProject(this, branchName));
+				listener.getLogger().println(
+						"Creating project for branch " + branchName);
+				try {
+					/*
+					 * TODO? create projects differently, copy like a normal job, but from the template (see ItemGroupMixIn#createTopLevelItem)
+					 * -- probably not necessary since we unmarshal from config to each project below
+					 */
+					getSubProjects().put(branchName,
+							new FreeStyleBranchProject(this, branchName));
+				} catch (Throwable e) {
+					e.printStackTrace(listener.fatalError(e.getMessage()));
+				}
 			}
 		}
 
@@ -794,32 +976,50 @@ public class FreeStyleMultiBranchProject extends
 			Map.Entry<String, FreeStyleBranchProject> entry = iter.next();
 
 			if (!branches.containsKey(entry.getKey())) {
-				iter.remove();
-				entry.getValue().delete();
+				listener.getLogger().println(
+						"Deleting project for branch " + entry.getKey());
+				try {
+					iter.remove();
+					entry.getValue().delete();
+				} catch (Throwable e) {
+					e.printStackTrace(listener.fatalError(e.getMessage()));
+				}
 			}
 		}
 
 		// Sync config for existing branch projects
-		// TODO: Finish
+		XmlFile configFile = templateProject.getConfigFile();
 		for (FreeStyleBranchProject project : getSubProjects().values()) {
-			/*
-			 * Copy the settings to the projects already in memory.  Everything
-			 * is set by reference, so all the child projects will get the same
-			 * objects.  We don't want this.
-			 */
-			project.setScm(scmSource.build(branches.get(project.getName())));
-			// project.getTriggersList().replaceBy(subProjectTriggers());
-			project.getBuildWrappersList().replaceBy(getBuildWrappersList());
-			project.getBuildersList().replaceBy(getBuildersList());
-			project.getPublishersList().replaceBy(getPublishersList());
+			listener.getLogger().println(
+					"Syncing configuration to project for branch "
+							+ project.getName());
+			try {
+				boolean wasDisabled = project.isDisabled();
 
-			// Save configuration to file
-			project.save();
+				// TODO: does this even?
+				configFile.unmarshal(project);
+				project.setIsTemplate(false);
+				if (!wasDisabled) {
+					project.enable();
+				}
+				project.save();
+				//noinspection unchecked
+				project.onLoad(project.getParent(), project.getName());
 
-			// Reload from file so new objects get created for each project
-			// TODO: does not work, find solution
-			project.getConfigFile().unmarshal(project);
+				// Build new SCM with the URL and branch already set
+				project.setScm(
+						scmSource.build(branches.get(project.getName())));
+				project.save();
+			} catch (Throwable e) {
+				e.printStackTrace(listener.fatalError(e.getMessage()));
+			}
 		}
+
+		// notify the queue as the projects might be now tied to different node
+		Jenkins.getInstance().getQueue().scheduleMaintenance();
+
+		// this is to reflect the upstream build adjustments done above
+		Jenkins.getInstance().rebuildDependencyGraphAsync();
 	}
 
 	/**
@@ -832,6 +1032,14 @@ public class FreeStyleMultiBranchProject extends
 	public String getSyncBranchesCron() {
 		return getSyncBranchesTrigger().getSpec();
 	}
+
+	//
+	// TODO: ball color and weather for parent
+	//
+
+	//
+	// TODO: take action on child projects when enabling/disabling parent
+	//
 
 	/**
 	 * Our project's descriptor.

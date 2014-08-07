@@ -33,7 +33,8 @@ THE SOFTWARE.
 		 xmlns:p="/lib/hudson/project">
 
 	<p:config-disableBuild/>
-	<p:config-concurrentBuild/>
+	<st:include it="${it.templateProject}"
+				page="/lib/hudson/project/config-concurrentBuild.jelly"/>
 
 	<j:set var="jdks" value="${app.JDKs}"/>
 	<j:if test="${jdks.size() gt 1}">
@@ -44,23 +45,30 @@ THE SOFTWARE.
 					checkUrl="'${rootURL}/defaultJDKCheck?value='+this.value">
 				<option>${%default.value}</option>
 				<j:forEach var="inst" items="${jdks}">
-					<f:option selected="${inst.name==it.JDK.name}"
-							  value="${inst.name}">${inst.name}
+					<f:option
+							selected="${inst.name==it.templateProject.JDK.name}"
+							value="${inst.name}">${inst.name}
 					</f:option>
 				</j:forEach>
 			</select>
 		</f:entry>
 	</j:if>
 
-	<p:config-assignedLabel/>
+	<st:include it="${it.templateProject}"
+				page="/lib/hudson/project/config-assignedLabel.jelly"/>
 
 	<f:section title="${%Advanced Project Options}">
 		<f:advanced>
-			<p:config-quietPeriod/>
-			<p:config-retryCount/>
-			<p:config-blockWhenUpstreamBuilding/>
-			<p:config-blockWhenDownstreamBuilding/>
-			<st:include page="configure-advanced.jelly" optional="true"/>
+			<st:include it="${it.templateProject}"
+						page="/lib/hudson/project/config-quietPeriod.jelly"/>
+			<st:include it="${it.templateProject}"
+						page="/lib/hudson/project/config-retryCount.jelly"/>
+			<st:include it="${it.templateProject}"
+						page="/lib/hudson/project/config-blockWhenUpstreamBuilding.jelly"/>
+			<st:include it="${it.templateProject}"
+						page="/lib/hudson/project/config-blockWhenDownstreamBuilding.jelly"/>
+			<st:include it="${it.templateProject}"
+						page="configure-advanced.jelly" optional="true"/>
 			<f:entry title="${%Display Name}" field="displayNameOrNull">
 				<f:textbox
 						checkUrl="'${rootURL}/checkDisplayName?displayName='+encodeURIComponent(this.value)+'&amp;jobName='+encodeURIComponent('${h.jsStringEscape(it.name)}')"/>
@@ -80,8 +88,8 @@ THE SOFTWARE.
 	<f:section title="${%Source Code Management}">
 		<f:entry title="${%Sync Branches Schedule}" field="syncBranchesCron"
 				 help="/descriptor/hudson.triggers.TimerTrigger/help/spec">
-			<f:textarea default="${it.syncBranchesCron}"
-						checkUrl="'descriptorByName/hudson.triggers.TimerTrigger/checkSpec?value=' + encodeURIComponent(this.value)"/>
+			<f:textbox default="${it.syncBranchesCron}"
+					   checkUrl="'descriptorByName/hudson.triggers.TimerTrigger/checkSpec?value=' + encodeURIComponent(this.value)"/>
 		</f:entry>
 
 		<j:set var="scms"
@@ -90,17 +98,33 @@ THE SOFTWARE.
 			<j:set var="descriptor" value="${scms[idx]}"/>
 			<f:radioBlock name="scmSource" value="${idx}"
 						  title="${descriptor.displayName}"
-						  checked="${it.getSCMSources().get(0).descriptor==descriptor}">
+						  checked="${it.getSCMSource().descriptor==descriptor}">
 				<j:set var="instance"
-					   value="${it.getSCMSources().get(0).descriptor==descriptor ? it.getSCMSources().get(0) : null}"/>
+					   value="${it.getSCMSource().descriptor==descriptor ? it.getSCMSource() : null}"/>
 				<st:include from="${descriptor}"
 							page="${descriptor.configPage}"/>
 			</f:radioBlock>
 		</j:forEach>
 	</f:section>
 
-	<p:config-trigger/>
-	<p:config-buildWrappers/>
-	<p:config-builders/>
-	<p:config-publishers2/>
+	<!-- from config-triggers.jelly -->
+	<j:invokeStatic var="triggers" className="hudson.triggers.Trigger"
+					method="for_">
+		<j:arg value="${it}" type="hudson.model.Item"/>
+	</j:invokeStatic>
+	<f:descriptorList title="${%Build Triggers}"
+					  descriptors="${triggers}"
+					  instances="${it.templateProject.triggers}">
+		<!--<d:invokeBody />-->
+		<!-- pseudo-trigger to configure URL to trigger builds remotely. -->
+		<st:include it="${it.templateProject}"
+					page="/hudson/model/BuildAuthorizationToken/config.jelly"/>
+	</f:descriptorList>
+
+	<st:include it="${it.templateProject}"
+				page="/lib/hudson/project/config-buildWrappers.jelly"/>
+	<st:include it="${it.templateProject}"
+				page="/lib/hudson/project/config-builders.jelly"/>
+	<st:include it="${it.templateProject}"
+				page="/lib/hudson/project/config-publishers2.jelly"/>
 </j:jelly>

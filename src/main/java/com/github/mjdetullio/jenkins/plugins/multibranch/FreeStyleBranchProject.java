@@ -24,11 +24,14 @@
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.interceptor.RequirePOST;
+
+import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 
 import hudson.DescriptorExtensionList;
 import hudson.Extension;
@@ -39,6 +42,9 @@ import hudson.model.Items;
 import hudson.model.Project;
 import hudson.model.TopLevelItem;
 import hudson.model.TopLevelItemDescriptor;
+import hudson.triggers.Trigger;
+import hudson.triggers.TriggerDescriptor;
+import hudson.util.DescribableList;
 import jenkins.model.Jenkins;
 
 /**
@@ -54,6 +60,8 @@ public class FreeStyleBranchProject
 
 	private static final String UNUSED = "unused";
 
+	private volatile boolean template = false;
+
 	/**
 	 * Constructor that specifies the {@link ItemGroup} for this project and the
 	 * project name.
@@ -63,6 +71,26 @@ public class FreeStyleBranchProject
 	 */
 	public FreeStyleBranchProject(ItemGroup parent, String name) {
 		super(parent, name);
+	}
+
+	/**
+	 * Returns whether or not this is the template.
+	 *
+	 * @return boolean
+	 */
+	public boolean isTemplate() {
+		return template;
+	}
+
+	/**
+	 * Sets whether or not this is the template
+	 *
+	 * @param isTemplate - true/false
+	 * @throws IOException - if problem saving
+	 */
+	public void setIsTemplate(boolean isTemplate) throws IOException {
+		template = isTemplate;
+		save();
 	}
 
 	/**
@@ -80,6 +108,11 @@ public class FreeStyleBranchProject
 	public DescriptorImpl getDescriptor() {
 		return (DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(
 				getClass());
+	}
+
+	@WithBridgeMethods(List.class)
+	public DescribableList<Trigger<?>, TriggerDescriptor> getTriggersList() {
+		return triggers();
 	}
 
 	/**
@@ -150,13 +183,11 @@ public class FreeStyleBranchProject
 		 * Method that removes this descriptor from the list of {@link
 		 * hudson.model.TopLevelItemDescriptor}s because we don't want to appear
 		 * as one.
-		 *
-		 * @throws Exception if the hack fails.
 		 */
 		@Initializer(after = InitMilestone.JOB_LOADED,
 				before = InitMilestone.COMPLETED)
 		@SuppressWarnings(UNUSED)
-		public static void postInitialize() throws Exception {
+		public static void postInitialize() {
 			DescriptorExtensionList<TopLevelItem, TopLevelItemDescriptor> all = Items.all();
 			all.remove(all.get(DescriptorImpl.class));
 		}
