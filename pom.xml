@@ -3,7 +3,7 @@
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.github.mjdetullio.jenkins</groupId>
+	<groupId>com.github.mjdetullio.jenkins.plugins</groupId>
 	<artifactId>multi-branch-project-plugin</artifactId>
 	<version>0.1-SNAPSHOT</version>
 	<packaging>hpi</packaging>
@@ -19,6 +19,7 @@
 		This plugin adds an additional project type that creates sub-projects
 		for each branch using a shared configuration.
 	</description>
+	<url>https://wiki.jenkins-ci.org/display/JENKINS/Multi-Branch+Project+Plugin</url>
 
 	<licenses>
 		<license>
@@ -27,6 +28,18 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+
+	<scm>
+		<connection>scm:git:git://github.com/mjdetullio/multi-branch-project-plugin.git</connection>
+		<developerConnection>scm:git:git@github.com:mjdetullio/multi-branch-project-plugin.git</developerConnection>
+		<url>https://github.com/mjdetullio/multi-branch-project-plugin</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/mjdetullio/multi-branch-project-plugin/issues</url>
+	</issueManagement>
 
 	<developers>
 		<developer>
