@@ -39,11 +39,13 @@ import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
+import hudson.model.JobProperty;
 import hudson.model.Project;
 import hudson.model.TopLevelItem;
 import hudson.model.TopLevelItemDescriptor;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
+import hudson.util.CopyOnWriteList;
 import hudson.util.DescribableList;
 import jenkins.model.Jenkins;
 
@@ -110,9 +112,27 @@ public class FreeStyleBranchProject
 				getClass());
 	}
 
+	/**
+	 * Exposes the triggers so they can be set from the parent.  Used for the
+	 * template.  For the branch sub-projects, triggers are unmarshaled from
+	 * XML.
+	 *
+	 * @return list of triggers
+	 */
 	@WithBridgeMethods(List.class)
 	public DescribableList<Trigger<?>, TriggerDescriptor> getTriggersList() {
 		return triggers();
+	}
+
+	/**
+	 * Exposes the job properties so they can be manipulated from the parent.
+	 * Used for the template, which requires properties to be cleared so they
+	 * they can be rebuilt. <p/> Warning: offers direct access to list
+	 *
+	 * @return direct access to list of properties
+	 */
+	public CopyOnWriteList<JobProperty<? super FreeStyleBranchProject>> getPropertiesList() {
+		return properties;
 	}
 
 	/**

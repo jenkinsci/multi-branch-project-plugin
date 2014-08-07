@@ -590,7 +590,7 @@ public class FreeStyleMultiBranchProject extends
 			t.rebuild(req, json.optJSONObject("properties"),
 					JobPropertyDescriptor.getPropertyDescriptors(
 							this.getClass()));
-			templateProject.getProperties().clear();
+			templateProject.getPropertiesList().clear();
 			for (JobProperty p : t) {
 				// Hack to set property owner since it is not exposed
 				// p.setOwner(this)
