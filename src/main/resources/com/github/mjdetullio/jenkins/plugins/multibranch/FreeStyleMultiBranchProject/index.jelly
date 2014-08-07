@@ -29,6 +29,10 @@ THE SOFTWARE.
 		<l:main-panel>
 			<st:include page="view-index-top.jelly" optional="true"/>
 
+			<j:if test="${it.supportsMakeDisabled()}">
+				<st:include page="makeDisabled.jelly"/>
+			</j:if>
+
 			<j:set var="items" value="${it.primaryView.items}"/>
 			<st:include page="main.jelly" it="${it.primaryView}"/>
 		</l:main-panel>
