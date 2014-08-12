@@ -514,6 +514,14 @@ public class FreeStyleMultiBranchProject extends
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isBuildable() {
+		return false;
+	}
+
+	/**
 	 * Stapler URL binding for creating views for our branch projects.  Unlike
 	 * normal views, this only requires permission to configure the project, not
 	 * create view permission.
