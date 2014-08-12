@@ -96,6 +96,18 @@ public class FreeStyleBranchProject
 	}
 
 	/**
+	 * First checks if the parent project is disabled, then this sub-project's
+	 * setting.
+	 *
+	 * @return true if parent project is disabled or this project is disabled
+	 */
+	@Override
+	public boolean isDisabled() {
+		return ((FreeStyleMultiBranchProject) getParent()).isDisabled()
+				|| super.isDisabled();
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -161,6 +173,7 @@ public class FreeStyleBranchProject
 	 * Disables configuring of this project type via Stapler. <p/> Inherited
 	 * docs: <p/> {@inheritDoc}
 	 */
+	@Override
 	@WebMethod(name = "config.xml")
 	public void doConfigDotXml(StaplerRequest req, StaplerResponse rsp)
 			throws IOException {

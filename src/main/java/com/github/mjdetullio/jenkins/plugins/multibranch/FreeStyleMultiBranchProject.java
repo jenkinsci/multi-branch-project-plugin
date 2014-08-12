@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014, Matthew DeTullio
+ * Copyright (c) 2014, Matthew DeTullio, Stephen Connolly
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,8 +67,10 @@ import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.BallColor;
 import hudson.model.BuildAuthorizationToken;
 import hudson.model.Descriptor;
+import hudson.model.HealthReport;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
@@ -77,6 +80,7 @@ import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.model.Label;
 import hudson.model.Project;
+import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
 import hudson.model.TopLevelItemDescriptor;
@@ -95,6 +99,7 @@ import hudson.triggers.Trigger;
 import hudson.util.DescribableList;
 import hudson.util.FormApply;
 import hudson.util.FormValidation;
+import hudson.util.TimeUnit2;
 import hudson.views.DefaultViewsTabBar;
 import hudson.views.ViewsTabBar;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -154,6 +159,7 @@ public class FreeStyleMultiBranchProject extends
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void onLoad(ItemGroup<? extends Item> parent, String name)
 			throws IOException {
 		super.onLoad(parent, name);
@@ -186,14 +192,17 @@ public class FreeStyleMultiBranchProject extends
 		}
 		viewsTabBar = new DefaultViewsTabBar();
 		viewGroupMixIn = new ViewGroupMixIn(this) {
+			@Override
 			protected List<View> views() {
 				return views;
 			}
 
+			@Override
 			protected String primaryView() {
 				return primaryView;
 			}
 
+			@Override
 			protected void primaryView(String name) {
 				primaryView = name;
 			}
@@ -216,6 +225,7 @@ public class FreeStyleMultiBranchProject extends
 
 		if (getBranchesDir().isDirectory()) {
 			for (File branch : getBranchesDir().listFiles(new FileFilter() {
+				@Override
 				public boolean accept(File pathname) {
 					return pathname.isDirectory() && new File(pathname,
 							"config.xml").isFile();
@@ -485,8 +495,19 @@ public class FreeStyleMultiBranchProject extends
 
 	//endregion SCMSourceOwner implementation
 
+	/**
+	 * Returns the project's only SCMSource.  Used by configure-entries.jelly.
+	 *
+	 * @return the project's only SCMSource (may be null)
+	 */
 	public SCMSource getSCMSource() {
 		return scmSource;
+	}
+
+	@Override
+	public FreeStyleBranchBuild getLastBuild() {
+		// TODO: take user to last build for any branch (when clicking weather)
+		throw new UnsupportedOperationException("Not yet implemented.");
 	}
 
 	/**
@@ -898,7 +919,7 @@ public class FreeStyleMultiBranchProject extends
 	 * its exceptions to the listener.
 	 */
 	public synchronized void syncBranches(TaskListener listener) {
-		if (!isBuildable()) {
+		if (isDisabled()) {
 			listener.getLogger().println("Project disabled.");
 			return;
 		}
@@ -1033,13 +1054,100 @@ public class FreeStyleMultiBranchProject extends
 		return getSyncBranchesTrigger().getSpec();
 	}
 
-	//
-	// TODO: ball color and weather for parent
-	//
+	/**
+	 * Used as the color of the status ball for the project. <p/> Kanged from
+	 * Branch API.
+	 *
+	 * @return the color of the status ball for the project.
+	 */
+	@Override
+	@Exported(visibility = 2, name = "color")
+	public BallColor getIconColor() {
+		if (isDisabled()) {
+			return BallColor.DISABLED;
+		}
 
-	//
-	// TODO: take action on child projects when enabling/disabling parent
-	//
+		BallColor c = BallColor.DISABLED;
+		boolean animated = false;
+
+		for (FreeStyleBranchProject item : getItems()) {
+			BallColor d = item.getIconColor();
+			animated |= d.isAnimated();
+			d = d.noAnime();
+			if (d.compareTo(c) < 0) {
+				c = d;
+			}
+		}
+
+		if (animated) {
+			c = c.anime();
+		}
+
+		return c;
+	}
+
+	/**
+	 * Get the current health reports for a job. <p/> Kanged from Branch API.
+	 *
+	 * @return the health reports. Never returns null
+	 */
+	@Exported(name = "healthReport")
+	public List<HealthReport> getBuildHealthReports() {
+		// TODO: cache reports?
+		int branchCount = 0;
+		int branchBuild = 0;
+		int branchSuccess = 0;
+		long branchAge = 0;
+
+		for (FreeStyleBranchProject item : getItems()) {
+			branchCount++;
+			FreeStyleBranchBuild lastBuild = item.getLastBuild();
+			if (lastBuild != null) {
+				branchBuild++;
+				Result r = lastBuild.getResult();
+				if (r != null && r.isBetterOrEqualTo(Result.SUCCESS)) {
+					branchSuccess++;
+				}
+				branchAge += TimeUnit2.MILLISECONDS.toDays(
+						lastBuild.getTimeInMillis()
+								- System.currentTimeMillis());
+			}
+		}
+
+		List<HealthReport> reports = new ArrayList<HealthReport>();
+		if (branchCount > 0) {
+			reports.add(new HealthReport(branchSuccess * 100 / branchCount,
+					Messages._Health_BranchSuccess()));
+			reports.add(new HealthReport(branchBuild * 100 / branchCount,
+					Messages._Health_BranchBuilds()));
+			reports.add(new HealthReport(Math.min(100,
+					Math.max(0, (int) (100 - (branchAge / branchCount)))),
+					Messages._Health_BranchAge()));
+			Collections.sort(reports);
+		}
+
+		return reports;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void makeDisabled(boolean b) throws IOException {
+		super.makeDisabled(b);
+
+		// Cancel sub-project builds
+		if (b) {
+			for (FreeStyleBranchProject project : getItems()) {
+				Jenkins.getInstance().getQueue().cancel(project);
+			}
+		}
+
+		/*
+		 * See sub-project's isDisabled(), which reference's this project's
+		 * disabled state rather than applying it to each sub-project.
+		 */
+	}
 
 	/**
 	 * Our project's descriptor.

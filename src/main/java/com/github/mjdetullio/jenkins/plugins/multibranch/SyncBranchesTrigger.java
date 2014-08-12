@@ -173,8 +173,6 @@ public class SyncBranchesTrigger extends Trigger<FreeStyleMultiBranchProject> {
 
 		/**
 		 * Writes the annotated log to the given output.
-		 *
-		 * @since 1.350
 		 */
 		public void writeLogTo(XMLOutput out) throws IOException {
 			new AnnotatedLargeText<SyncBranchesAction>(getLogFile(),
@@ -214,7 +212,6 @@ public class SyncBranchesTrigger extends Trigger<FreeStyleMultiBranchProject> {
 	@Initializer(before = InitMilestone.PLUGINS_STARTED)
 	@SuppressWarnings(UNUSED)
 	public static void registerXStream() {
-		Items.XSTREAM.alias("sync-branches-trigger",
-				SyncBranchesTrigger.class);
+		Items.XSTREAM.alias("sync-branches-trigger", SyncBranchesTrigger.class);
 	}
 }
