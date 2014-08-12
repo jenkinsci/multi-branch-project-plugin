@@ -5,8 +5,13 @@ branch using a shared configuration.
 
 ## Usage
 
-Install the plugin manually by compiling the HPI and uploading it through the
-Jenkins interface.  It will make it to the plugin update center eventually.
+Install the plugin using one of these methods:
+
+* Use the Jenkins plugin update center to download and install the latest
+version.
+* Clone this repo, manually compile the HPI file, and upload it through the
+Jenkins interface on the "advanced" tab in the plugin update center to get
+the newest/unreleased code.
 
 The project type will appear in the list on the "New Job" page.  When
 configuring the project, the SCM portion will be different.  This section tells
@@ -24,7 +29,7 @@ To release the plugin:
 
     mvn release:prepare release:perform
 
-To test in a local Jenkins instance
+To test in a local Jenkins instance:
 
     mvn hpi:run
 
