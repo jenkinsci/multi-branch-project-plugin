@@ -504,6 +504,9 @@ public class FreeStyleMultiBranchProject extends
 		return scmSource;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public FreeStyleBranchBuild getLastBuild() {
 		// TODO: take user to last build for any branch (when clicking weather)
@@ -961,10 +964,6 @@ public class FreeStyleMultiBranchProject extends
 		Set<SCMHead> heads = scmSource.fetch(listener);
 
 		/*
-		 * TODO: look at name encode/decode, test branch names with odd characters
-		 * -- needed for directory, might be entirely handled by getRootDirFor() and nothing more would be required
-		 */
-		/*
 		 * Rather than creating a new Map for subProjects and swapping with
 		 * the old one, always use getSubProjects() so synchronization is
 		 * maintained.
@@ -979,10 +978,6 @@ public class FreeStyleMultiBranchProject extends
 				listener.getLogger().println(
 						"Creating project for branch " + branchName);
 				try {
-					/*
-					 * TODO? create projects differently, copy like a normal job, but from the template (see ItemGroupMixIn#createTopLevelItem)
-					 * -- probably not necessary since we unmarshal from config to each project below
-					 */
 					getSubProjects().put(branchName,
 							new FreeStyleBranchProject(this, branchName));
 				} catch (Throwable e) {
@@ -1017,7 +1012,6 @@ public class FreeStyleMultiBranchProject extends
 			try {
 				boolean wasDisabled = project.isDisabled();
 
-				// TODO: does this even?
 				configFile.unmarshal(project);
 				project.setIsTemplate(false);
 				if (!wasDisabled) {

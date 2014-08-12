@@ -33,8 +33,10 @@ THE SOFTWARE.
 		 xmlns:p="/lib/hudson/project">
 
 	<p:config-disableBuild/>
-	<st:include it="${it.templateProject}"
-				page="/lib/hudson/project/config-concurrentBuild.jelly"/>
+
+	<f:optionalBlock field="concurrentBuild"
+					 title="Execute concurrent builds if necessary"
+					 checked="${it.templateProject.concurrentBuild}"/>
 
 	<j:set var="jdks" value="${app.JDKs}"/>
 	<j:if test="${jdks.size() gt 1}">
@@ -54,8 +56,18 @@ THE SOFTWARE.
 		</f:entry>
 	</j:if>
 
-	<st:include it="${it.templateProject}"
-				page="/lib/hudson/project/config-assignedLabel.jelly"/>
+	<!-- master/slave -->
+	<j:if test="${app.labels.size() gt 1 || app.clouds.size() gt 0 || (it.templateProject.assignedLabel!=null and it.templateProject.assignedLabel!=app.selfLabel)}">
+		<f:optionalBlock name="hasSlaveAffinity"
+						 title="${%Restrict where this project can be run}"
+						 checked="${it.templateProject.assignedLabel!=null}"
+						 field="slaveAffinity">
+			<f:entry title="${%Label Expression}" field="assignedLabelString">
+				<f:textbox default="${it.templateProject.assignedLabelString}"
+						   autoCompleteDelimChar=" "/>
+			</f:entry>
+		</f:optionalBlock>
+	</j:if>
 
 	<f:section title="${%Advanced Project Options}">
 		<f:advanced>
