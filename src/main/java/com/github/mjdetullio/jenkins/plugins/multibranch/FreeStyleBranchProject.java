@@ -37,6 +37,7 @@ import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
+import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.JobProperty;
@@ -73,6 +74,19 @@ public class FreeStyleBranchProject
 	 */
 	public FreeStyleBranchProject(ItemGroup parent, String name) {
 		super(parent, name);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onLoad(ItemGroup<? extends Item> parent, String name) throws IOException {
+		/*
+		 * Name parameter should be the directory name, which needs to be
+		 * decoded.
+		 */
+		String decoded = ProjectUtils.rawDecode(name);
+		super.onLoad(parent, decoded);
 	}
 
 	/**
