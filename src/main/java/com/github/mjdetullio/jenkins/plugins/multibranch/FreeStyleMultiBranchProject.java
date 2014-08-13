@@ -95,6 +95,7 @@ import hudson.tasks.BuildTrigger;
 import hudson.tasks.BuildWrappers;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
+import hudson.triggers.SCMTrigger;
 import hudson.triggers.Trigger;
 import hudson.util.DescribableList;
 import hudson.util.FormApply;
@@ -473,7 +474,6 @@ public class FreeStyleMultiBranchProject extends
 	 */
 	@Override
 	public void onSCMSourceUpdated(@NonNull SCMSource source) {
-		// TODO: notification may be for a new branch that doesn't have a project yet, so trigger build for new projects?
 		getSyncBranchesTrigger().run();
 	}
 
@@ -977,6 +977,7 @@ public class FreeStyleMultiBranchProject extends
 		 * maintained.
 		 */
 		Map<String, SCMHead> branches = new HashMap<String, SCMHead>();
+		Set<String> newBranches = new HashSet<String>();
 		for (SCMHead head : heads) {
 			String branchName = head.getName();
 			branches.put(branchName, head);
@@ -988,6 +989,7 @@ public class FreeStyleMultiBranchProject extends
 				try {
 					getSubProjects().put(branchName,
 							new FreeStyleBranchProject(this, branchName));
+					newBranches.add(branchName);
 				} catch (Throwable e) {
 					e.printStackTrace(listener.fatalError(e.getMessage()));
 				}
@@ -1043,6 +1045,19 @@ public class FreeStyleMultiBranchProject extends
 
 		// this is to reflect the upstream build adjustments done above
 		Jenkins.getInstance().rebuildDependencyGraphAsync();
+
+		// Trigger build for new branches
+		for (String branch : newBranches) {
+			listener.getLogger().println(
+					"Scheduling build for branch " + branch);
+			try {
+				FreeStyleBranchProject project = getSubProjects().get(branch);
+				project.scheduleBuild(
+						new SCMTrigger.SCMTriggerCause("New branch detected."));
+			} catch (Throwable e) {
+				e.printStackTrace(listener.fatalError(e.getMessage()));
+			}
+		}
 	}
 
 	/**
