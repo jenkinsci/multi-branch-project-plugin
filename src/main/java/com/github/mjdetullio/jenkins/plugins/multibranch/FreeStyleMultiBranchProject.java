@@ -78,7 +78,6 @@ import hudson.model.JDK;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
-import hudson.model.Label;
 import hudson.model.Project;
 import hudson.model.Result;
 import hudson.model.TaskListener;
@@ -508,15 +507,6 @@ public class FreeStyleMultiBranchProject extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	public FreeStyleBranchBuild getLastBuild() {
-		// TODO: take user to last build for any branch (when clicking weather)
-		throw new UnsupportedOperationException("Not yet implemented.");
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public boolean isBuildable() {
 		return false;
 	}
@@ -778,18 +768,29 @@ public class FreeStyleMultiBranchProject extends
 			templateProject.setScmCheckoutStrategy(null);
 		}
 
+		// Hack to set assignedNode/canRoam since it is not exposed
+		// setAssignedLabel does not work as desired, specifically when restricting to master
+		String assignedNode = null;
 		if (req.getParameter("hasSlaveAffinity") != null) {
-			try {
-				templateProject.setAssignedLabel(
-						Label.parseExpression(Util.fixEmptyAndTrim(
-								req.getParameter("_.assignedLabelString"))));
-			} catch (ANTLRException e) {
-				// must be old label or host name that includes whitespace or other unsafe chars
-				templateProject.setAssignedLabel(null);
-			}
-		} else {
-			templateProject.setAssignedLabel(null);
+			assignedNode = Util.fixEmptyAndTrim(
+					req.getParameter("_.assignedLabelString"));
 		}
+		boolean canRoam = assignedNode == null;
+		try {
+			Field f = AbstractProject.class.getDeclaredField("assignedNode");
+			f.setAccessible(true);
+			f.set(templateProject, assignedNode);
+		} catch (Throwable e) {
+			LOGGER.log(Level.WARNING, "Unable to set assignedNode", e);
+		}
+		try {
+			Field f = AbstractProject.class.getDeclaredField("canRoam");
+			f.setAccessible(true);
+			f.set(templateProject, canRoam);
+		} catch (Throwable e) {
+			LOGGER.log(Level.WARNING, "Unable to set canRoam", e);
+		}
+		// End hack
 
 		templateProject.setConcurrentBuild(
 				req.getSubmittedForm().has("concurrentBuild"));
