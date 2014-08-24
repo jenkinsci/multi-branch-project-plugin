@@ -1,8 +1,7 @@
 <!--
 The MIT License
 
-Copyright (c) 2004-2014, Sun Microsystems, Inc., Kohsuke Kawaguchi,
-id:cactusman, Yahoo! Inc., Matthew DeTullio
+Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Erik Ramfelt, Tom Huybrechts, id:cactusman
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,20 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 
-<!--
-  New View page
--->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
-	<l:layout norefresh="true" permission="${it.CONFIGURE}"
-			  title="${%New View}">
-		<st:include page="sidepanel.jelly"/>
-
+	<l:layout title="${it.displayName}">
+		<st:include page="sidepanel.jelly" />
 		<l:main-panel>
-			<j:set var="views" value="${it.getViewDescriptors()}"/>
-			<n:form nameTitle="${%View name}" action="createView"
-					descriptors="${views}" checkUrl="viewExistsCheck"
-					xmlns:n="/lib/hudson/newFromList"/>
+			<st:include page="view-index-top.jelly" optional="true" />
+
+			<j:if test="${it.supportsMakeDisabled()}">
+				<st:include page="makeDisabled.jelly" />
+			</j:if>
+
+			<j:set var="items" value="${it.primaryView.items}" />
+			<st:include page="main.jelly" it="${it.primaryView}" />
 		</l:main-panel>
 	</l:layout>
 </j:jelly>

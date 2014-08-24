@@ -21,35 +21,35 @@
  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  ~ THE SOFTWARE.
  -->
+
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core"
-		 xmlns:l="/lib/layout">
-	<j:set var="url" value="${h.getNearestAncestorUrl(request,it)}"/>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+	<j:set var="url" value="${h.getNearestAncestorUrl(request,it)}" />
 	<j:choose>
 		<j:when test="${it.parent==app}">
 			<l:task contextMenu="false" href="${rootURL}/"
-					icon="images/24x24/up.gif" title="${%Back to Dashboard}"/>
+					icon="images/24x24/up.gif" title="${%Back to Dashboard}" />
 		</j:when>
 		<j:otherwise>
 			<l:task contextMenu="false" href="${it.parent.absoluteUrl}"
-					icon="images/24x24/up.gif" title="${%Up}"/>
+					icon="images/24x24/up.gif" title="${%Up}" />
 		</j:otherwise>
 	</j:choose>
 	<l:task icon="images/24x24/search.gif" href="${url}/" title="${%Status}"
-			contextMenu="false"/>
+			contextMenu="false" />
 	<j:if test="${it.configurable}">
 		<l:task icon="images/24x24/edit-delete.png" href="${url}/doDelete"
 				title="${%delete(it.pronoun)}" permission="${it.DELETE}"
 				post="true" requiresConfirmation="true"
-				confirmationMessage="${%delete.confirm(it.pronoun, it.displayName)}"/>
+				confirmationMessage="${%delete.confirm(it.pronoun, it.displayName)}" />
 		<j:choose>
 			<j:when test="${h.hasPermission(it,it.CONFIGURE)}">
 				<l:task icon="images/24x24/setting.png" href="${url}/configure"
-						title="${%Configure}"/>
+						title="${%Configure}" />
 			</j:when>
 			<j:when test="${h.hasPermission(it,it.EXTENDED_READ)}">
 				<l:task icon="images/24x24/setting.png" href="${url}/configure"
-						title="${%View Configuration}"/>
+						title="${%View Configuration}" />
 			</j:when>
 		</j:choose>
 	</j:if>

@@ -21,18 +21,6 @@
  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  ~ THE SOFTWARE.
  -->
+
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
-		 xmlns:l="/lib/layout" xmlns:f="/lib/form">
-	<l:layout title="${it.displayName} Config" norefresh="true"
-			  permission="${it.EXTENDED_READ}">
-		<st:include page="sidepanel.jelly"/>
-		<f:breadcrumb-config-outline/>
-		<l:main-panel>
-			<p>
-				This sub-project configuration cannot be edited directly.
-				<a href="${rootURL}/${it.parent.url}configure">Configure the parent multi-branch project</a> instead.
-			</p>
-		</l:main-panel>
-	</l:layout>
-</j:jelly>
+<j:jelly xmlns:j="jelly:core" />

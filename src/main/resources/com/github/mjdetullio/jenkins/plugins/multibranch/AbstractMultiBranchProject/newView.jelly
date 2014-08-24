@@ -1,8 +1,8 @@
 <!--
 The MIT License
 
-Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi,
-Eric Lefevre-Ardant, id:cactusman, Yahoo! Inc., Matthew DeTullio
+Copyright (c) 2004-2014, Sun Microsystems, Inc., Kohsuke Kawaguchi,
+id:cactusman, Yahoo! Inc., Matthew DeTullio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,26 +24,20 @@ THE SOFTWARE.
 -->
 
 <!--
-  Config page
+  New View page
 -->
+
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core"
-		 xmlns:f="/lib/form">
-	<j:set var="instance" value="${it}"/>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+	<l:layout norefresh="true" permission="${it.CONFIGURE}"
+			title="${%New View}">
+		<st:include page="sidepanel.jelly" />
 
-	<j:if test="${it.supportsLogRotator()}">
-		<!-- log rotator -->
-		<f:optionalBlock name="logrotate"
-						 help="/help/project-config/log-rotation.html"
-						 title="${%Discard Old Builds}"
-						 checked="${it.buildDiscarder!=null}" inline="true">
-			<f:dropdownDescriptorSelector field="buildDiscarder"
-										  title="${%Strategy}"/>
-		</f:optionalBlock>
-	</j:if>
-
-	<!-- job property configurations. This should have been <f:descriptorList> -->
-	<f:descriptorList field="properties"
-					  descriptors="${h.getJobPropertyDescriptors(it.getClass())}"
-					  forceRowSet="true"/>
+		<l:main-panel>
+			<j:set var="views" value="${it.getViewDescriptors()}" />
+			<n:form nameTitle="${%View name}" action="createView"
+					descriptors="${views}" checkUrl="viewExistsCheck"
+					xmlns:n="/lib/hudson/newFromList" />
+		</l:main-panel>
+	</l:layout>
 </j:jelly>

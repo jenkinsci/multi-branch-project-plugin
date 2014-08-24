@@ -56,7 +56,7 @@ import hudson.util.StreamTaskListener;
  *
  * @author Matthew DeTullio
  */
-public class SyncBranchesTrigger extends Trigger<FreeStyleMultiBranchProject> {
+public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 	private static final String CLASSNAME = SyncBranchesTrigger.class.getName();
 	private static final Logger LOGGER = Logger.getLogger(CLASSNAME);
 

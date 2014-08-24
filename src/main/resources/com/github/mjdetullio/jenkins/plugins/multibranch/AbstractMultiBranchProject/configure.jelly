@@ -25,45 +25,43 @@ THE SOFTWARE.
 <!--
   Config page. derived class specific entries should go to configure-entries.jsp
 -->
+
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core"
-		 xmlns:st="jelly:stapler"
-		 xmlns:l="/lib/layout"
-		 xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout"
+		xmlns:f="/lib/form">
 	<l:layout title="${it.displayName} Config" norefresh="true"
-			  permission="${it.EXTENDED_READ}">
-		<st:include page="sidepanel.jelly"/>
-		<f:breadcrumb-config-outline/>
+			permission="${it.EXTENDED_READ}">
+		<st:include page="sidepanel.jelly" />
+		<f:breadcrumb-config-outline />
 		<l:main-panel>
 			<div class="behavior-loading">${%LOADING}</div>
 			<f:form method="post" action="configSubmit" name="config">
-				<j:set var="descriptor" value="${it.descriptor}"/>
-				<j:set var="instance" value="${it}"/>
+				<j:set var="descriptor" value="${it.descriptor}" />
+				<j:set var="instance" value="${it}" />
 
 				<j:if test="${it.isNameEditable()}">
 					<f:entry title="${%name(it.pronoun)}">
-						<f:textbox name="name" value="${it.name}"/>
+						<f:textbox name="name" value="${it.name}" />
 					</f:entry>
 				</j:if>
 				<f:entry title="${%Description}"
-						 help="${app.markupFormatter.helpUrl}">
+						help="${app.markupFormatter.helpUrl}">
 					<f:textarea name="description" value="${it.description}"
-								codemirror-mode="${app.markupFormatter.codeMirrorMode}"
-								codemirror-config="${app.markupFormatter.codeMirrorConfig}"
-								previewEndpoint="/markupFormatter/previewDescription"/>
+							codemirror-mode="${app.markupFormatter.codeMirrorMode}"
+							codemirror-config="${app.markupFormatter.codeMirrorConfig}"
+							previewEndpoint="/markupFormatter/previewDescription" />
 				</f:entry>
 
-				<st:include it="${it.templateProject}"
-							page="configure-top.jelly"/>
+				<!-- Log rotation and job properties moved to sub-project options-->
 
 				<!-- additional entries from derived classes -->
-				<st:include page="configure-entries.jelly"/>
+				<st:include page="configure-entries.jelly" />
 
 				<j:if test="${h.hasPermission(it,it.CONFIGURE)}">
 					<f:bottomButtonBar>
 						<!--<input type="button" name="StructureTest" value="Test" onclick="buildFormTree(this.form)" />-->
-						<f:submit value="${%Save}"/>
-						<f:apply/>
+						<f:submit value="${%Save}" />
+						<f:apply />
 					</f:bottomButtonBar>
 				</j:if>
 			</f:form>
