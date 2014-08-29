@@ -607,15 +607,46 @@ public class FreeStyleMultiBranchProject extends
 				templateProject.setBuildDiscarder(null);
 			}
 
-			DescribableList<JobProperty<?>, JobPropertyDescriptor> t = new DescribableList<JobProperty<?>, JobPropertyDescriptor>(
-					NOOP, getAllProperties());
-			t.rebuild(req, json.optJSONObject("properties"),
-					JobPropertyDescriptor.getPropertyDescriptors(
-							this.getClass()));
-			templateProject.getPropertiesList().clear();
+			/*
+			 * Save job properties to the parent project.
+			 * Needed for things like project-based matrix authorization so the
+			 * parent project's ACL works as desired.
+			 */
+			DescribableList<JobProperty<?>, JobPropertyDescriptor> t = new DescribableList<JobProperty<?>, JobPropertyDescriptor>(NOOP,getAllProperties());
+			t.rebuild(req,json.optJSONObject("properties"),JobPropertyDescriptor.getPropertyDescriptors(this.getClass()));
+			properties.clear();
 			for (JobProperty p : t) {
 				// Hack to set property owner since it is not exposed
 				// p.setOwner(this)
+				try {
+					Field f = JobProperty.class.getDeclaredField(
+							"owner");
+					f.setAccessible(true);
+					f.set(p, this);
+				} catch (Throwable e) {
+					LOGGER.log(Level.WARNING,
+							"Unable to set job property owner", e);
+				}
+				// End hack
+				properties.add(p);
+			}
+
+			/*
+			 * WARNING: Copy/paste crap
+			 *
+			 * Save job properties to the template project.
+			 * This is more important than the part saving to the parent so
+			 * things like parameters 
+			 */
+ 			DescribableList<JobProperty<?>, JobPropertyDescriptor> t2 = new DescribableList<JobProperty<?>, JobPropertyDescriptor>(
+					NOOP, templateProject.getAllProperties());
+			t2.rebuild(req, json.optJSONObject("properties"),
+					JobPropertyDescriptor.getPropertyDescriptors(
+							this.getClass()));
+			templateProject.getPropertiesList().clear();
+			for (JobProperty p : t2) {
+				// Hack to set property owner since it is not exposed
+				// p.setOwner(templateProject)
 				try {
 					Field f = JobProperty.class.getDeclaredField(
 							"owner");
