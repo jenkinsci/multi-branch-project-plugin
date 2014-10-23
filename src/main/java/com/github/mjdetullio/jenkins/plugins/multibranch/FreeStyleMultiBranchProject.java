@@ -572,6 +572,12 @@ public class FreeStyleMultiBranchProject extends
 		rsp.sendRedirect2(req.getContextPath() + '/' + getParent().getUrl());
 	}
 
+    @RequirePOST
+    public void doSyncBranches(StaplerRequest req, StaplerResponse rsp)
+            throws IOException, InterruptedException {
+            getSyncBranchesTrigger().run();
+    }
+
 	/**
 	 * {@inheritDoc}
 	 */
