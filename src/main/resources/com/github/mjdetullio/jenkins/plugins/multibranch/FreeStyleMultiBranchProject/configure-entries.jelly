@@ -104,6 +104,10 @@ THE SOFTWARE.
 					   checkUrl="'descriptorByName/hudson.triggers.TimerTrigger/checkSpec?value=' + encodeURIComponent(this.value)"/>
 		</f:entry>
 
+		<f:optionalBlock field="allowAnonymousSync"
+						 title="Allow anonymous trigger of branch sync"
+						 checked="${it.allowAnonymousSync}"/>
+
 		<j:set var="scms"
 			   value="${it.getSCMSourceDescriptors(true)}"/>
 		<j:forEach var="idx" begin="0" end="${size(scms)-1}">

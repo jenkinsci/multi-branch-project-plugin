@@ -130,6 +130,8 @@ public class FreeStyleMultiBranchProject extends
 	private static final String UNUSED = "unused";
 	private static final String DEFAULT_SYNC_SPEC = "H/5 * * * *";
 
+	private boolean allowAnonymousSync;
+
 	private volatile SCMSource scmSource;
 
 	private transient FreeStyleBranchProject templateProject;
@@ -504,6 +506,28 @@ public class FreeStyleMultiBranchProject extends
 	}
 
 	/**
+	 * Gets whether anonymous sync is allowed from
+	 * <code>${JOB_URL}/syncBranches</code>
+	 */
+	@SuppressWarnings(UNUSED)
+	public boolean isAllowAnonymousSync() {
+		return allowAnonymousSync;
+	}
+
+	/**
+	 * Sets whether anonymous sync is allowed from
+	 * <code>${JOB_URL}/syncBranches</code>.
+	 *
+	 * @param b - true/false
+	 * @throws IOException - if problems saving
+	 */
+	@SuppressWarnings(UNUSED)
+	public void setAllowAnonymousSync(boolean b) throws IOException {
+		allowAnonymousSync = b;
+		save();
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -584,6 +608,9 @@ public class FreeStyleMultiBranchProject extends
 	@SuppressWarnings(UNUSED)
 	public void doSyncBranches(StaplerRequest req, StaplerResponse rsp)
 			throws IOException, InterruptedException {
+		if (!allowAnonymousSync) {
+			checkPermission(CONFIGURE);
+		}
 		getSyncBranchesTrigger().run();
 	}
 
@@ -897,6 +924,8 @@ public class FreeStyleMultiBranchProject extends
 			throw new IllegalArgumentException(
 					"Failed to instantiate SyncBranchesTrigger", e);
 		}
+
+		allowAnonymousSync = req.getSubmittedForm().has("allowAnonymousSync");
 
 		primaryView = json.getString("primaryView");
 
