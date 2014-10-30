@@ -572,11 +572,20 @@ public class FreeStyleMultiBranchProject extends
 		rsp.sendRedirect2(req.getContextPath() + '/' + getParent().getUrl());
 	}
 
-    @RequirePOST
-    public void doSyncBranches(StaplerRequest req, StaplerResponse rsp)
-            throws IOException, InterruptedException {
-            getSyncBranchesTrigger().run();
-    }
+	/**
+	 * Exposes a URI that allows the trigger of a branch sync.
+	 *
+	 * @param req - Stapler request
+	 * @param rsp - Stapler response
+	 * @throws IOException          - if problems
+	 * @throws InterruptedException - if problems
+	 */
+	@RequirePOST
+	@SuppressWarnings(UNUSED)
+	public void doSyncBranches(StaplerRequest req, StaplerResponse rsp)
+			throws IOException, InterruptedException {
+		getSyncBranchesTrigger().run();
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -618,8 +627,11 @@ public class FreeStyleMultiBranchProject extends
 			 * Needed for things like project-based matrix authorization so the
 			 * parent project's ACL works as desired.
 			 */
-			DescribableList<JobProperty<?>, JobPropertyDescriptor> t = new DescribableList<JobProperty<?>, JobPropertyDescriptor>(NOOP,getAllProperties());
-			t.rebuild(req,json.optJSONObject("properties"),JobPropertyDescriptor.getPropertyDescriptors(this.getClass()));
+			DescribableList<JobProperty<?>, JobPropertyDescriptor> t = new DescribableList<JobProperty<?>, JobPropertyDescriptor>(
+					NOOP, getAllProperties());
+			t.rebuild(req, json.optJSONObject("properties"),
+					JobPropertyDescriptor.getPropertyDescriptors(
+							this.getClass()));
 			properties.clear();
 			for (JobProperty p : t) {
 				// Hack to set property owner since it is not exposed
@@ -644,7 +656,7 @@ public class FreeStyleMultiBranchProject extends
 			 * This is more important than the part saving to the parent so
 			 * things like parameters 
 			 */
- 			DescribableList<JobProperty<?>, JobPropertyDescriptor> t2 = new DescribableList<JobProperty<?>, JobPropertyDescriptor>(
+			DescribableList<JobProperty<?>, JobPropertyDescriptor> t2 = new DescribableList<JobProperty<?>, JobPropertyDescriptor>(
 					NOOP, templateProject.getAllProperties());
 			t2.rebuild(req, json.optJSONObject("properties"),
 					JobPropertyDescriptor.getPropertyDescriptors(
@@ -1199,7 +1211,7 @@ public class FreeStyleMultiBranchProject extends
 		}
 
 		/*
-		 * See sub-project's isDisabled(), which reference's this project's
+		 * See sub-project's isDisabled(), which references this project's
 		 * disabled state rather than applying it to each sub-project.
 		 */
 	}
