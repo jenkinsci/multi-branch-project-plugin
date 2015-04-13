@@ -736,6 +736,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		if (!allowAnonymousSync) {
 			checkPermission(CONFIGURE);
 		}
+		getSyncBranchesTrigger().run();
 	}
 
 	/**
