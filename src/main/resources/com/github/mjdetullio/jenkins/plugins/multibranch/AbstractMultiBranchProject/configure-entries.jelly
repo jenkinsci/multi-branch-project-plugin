@@ -77,5 +77,6 @@ THE SOFTWARE.
 		</j:forEach>
 	</f:section>
 
-	<st:include it="${it.template}" page="configure-branch-entries.jelly" />
+	<st:include it="${it.template}" from="${it}"
+			page="configure-branch-entries.jelly" />
 </j:jelly>
