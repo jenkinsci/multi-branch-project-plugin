@@ -129,6 +129,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	protected transient P templateProject;
 
+	// Map of branch name -> sub-project
 	private transient Map<String, P> subProjects;
 
 	private List<String> disabledSubProjects;
@@ -274,6 +275,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * #onLoad(ItemGroup, String)}.
 	 */
 	protected synchronized void init() {
+		if (subProjects == null) {
+			subProjects = Collections.synchronizedMap(new LinkedHashMap<String, P>());
+		}
+
 		if (disabledSubProjects == null) {
 			disabledSubProjects = new PersistedList<String>(this);
 		}
@@ -346,7 +351,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 					//noinspection unchecked
 					P project = (P) item;
 
-					getSubProjects().put(item.getName(), project);
+					subProjects.put(item.getName(), project);
 
 					// Handle offline tampering of disabled setting
 					if (isDisabled() && !project.isDisabled()) {
@@ -396,11 +401,16 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	/**
 	 * Retrieves the collection of sub-projects for this project.
 	 */
-	protected synchronized Map<String, P> getSubProjects() {
-		if (subProjects == null) {
-			subProjects = new LinkedHashMap<String, P>();
+	private List<P> getSubProjects() {
+		synchronized (subProjects) {
+			return new ArrayList<P>(subProjects.values());
 		}
-		return subProjects;
+	}
+
+	private Set<String> getCurrentBranchNames() {
+		synchronized (subProjects) {
+			return new HashSet<String>(subProjects.keySet());
+		}
 	}
 
 	/**
@@ -435,7 +445,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 */
 	@Override
 	public Collection<P> getItems() {
-		return getSubProjects().values();
+		return getSubProjects();
 	}
 
 	/**
@@ -451,7 +461,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 */
 	@Override
 	public P getItem(String name) {
-		return getSubProjects().get(name);
+		return subProjects.get(name);
 	}
 
 	/**
@@ -482,7 +492,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 */
 	@Override
 	public void onDeleted(P item) {
-		getSubProjects().remove(item.getName());
+		subProjects.remove(item.getName());
 	}
 
 	//endregion ItemGroup implementation
@@ -949,7 +959,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		if (scmSource == null) {
 			listener.getLogger().println("SCM not selected.");
 
-			for (P project : getSubProjects().values()) {
+			for (P project : getSubProjects()) {
 				listener.getLogger().println(
 						"Deleting project for branch " + project.getName());
 				try {
@@ -959,7 +969,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 				}
 			}
 
-			getSubProjects().clear();
+			subProjects.clear();
 
 			return;
 		}
@@ -967,23 +977,18 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		// Check SCM for branches
 		Set<SCMHead> heads = scmSource.fetch(listener);
 
-		/*
-		 * Rather than creating a new Map for subProjects and swapping with
-		 * the old one, always use getSubProjects() so synchronization is
-		 * maintained.
-		 */
 		Map<String, SCMHead> branches = new HashMap<String, SCMHead>();
 		Set<String> newBranches = new HashSet<String>();
 		for (SCMHead head : heads) {
 			String branchName = head.getName();
 			branches.put(branchName, head);
 
-			if (!getSubProjects().containsKey(branchName)) {
+			if (!subProjects.containsKey(branchName)) {
 				// Add new projects
 				listener.getLogger().println(
 						"Creating project for branch " + branchName);
 				try {
-					getSubProjects().put(branchName,
+					subProjects.put(branchName,
 							createNewSubProject(this, branchName));
 					newBranches.add(branchName);
 				} catch (Throwable e) {
@@ -993,25 +998,24 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		}
 
 		// Delete all the sub-projects for branches that no longer exist
-		Iterator<Map.Entry<String, P>> iter = getSubProjects().entrySet().iterator();
-		while (iter.hasNext()) {
-			Map.Entry<String, P> entry = iter.next();
 
-			if (!branches.containsKey(entry.getKey())) {
-				listener.getLogger().println(
-						"Deleting project for branch " + entry.getKey());
-				try {
-					iter.remove();
-					entry.getValue().delete();
-				} catch (Throwable e) {
-					e.printStackTrace(listener.fatalError(e.getMessage()));
-				}
+		Set<String> projectBranchesToRemove = getCurrentBranchNames();
+		projectBranchesToRemove.removeAll(branches.keySet());
+		for (String branchName : projectBranchesToRemove) {
+			listener.getLogger().println("Deleting project for branch " + branchName);
+
+			try {
+				P project = subProjects.remove(branchName);
+				project.delete();
+			} catch (Throwable e) {
+				e.printStackTrace(listener.fatalError(e.getMessage()));
 			}
 		}
 
+
 		// Sync config for existing branch projects
 		XmlFile configFile = templateProject.getConfigFile();
-		for (P project : getSubProjects().values()) {
+		for (P project : getSubProjects()) {
 			listener.getLogger().println(
 					"Syncing configuration to project for branch "
 							+ project.getName());
@@ -1057,7 +1061,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			listener.getLogger().println(
 					"Scheduling build for branch " + branch);
 			try {
-				P project = getSubProjects().get(branch);
+				P project = subProjects.get(branch);
 				project.scheduleBuild(
 						new SCMTrigger.SCMTriggerCause("New branch detected."));
 			} catch (Throwable e) {
@@ -1162,6 +1166,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	public void makeDisabled(boolean b) throws IOException {
 		super.makeDisabled(b);
 
+		Iterable<P> subProjectsView = getSubProjects();
+
 		// Manage the sub-projects
 		if (b) {
 			/*
@@ -1170,7 +1176,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			 * add all branches.  Obviously not desirable.
 			 */
 			if (disabledSubProjects.isEmpty()) {
-				for (P project : getSubProjects().values()) {
+				for (P project : subProjectsView) {
 					if (project.isDisabled()) {
 						disabledSubProjects.add(project.getName());
 					}
@@ -1178,12 +1184,12 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			}
 
 			// Always forcefully disable all sub-projects
-			for (P project : getSubProjects().values()) {
+			for (P project : subProjectsView) {
 				project.disable();
 			}
 		} else {
 			// Re-enable only the projects that weren't manually marked disabled
-			for (P project : getSubProjects().values()) {
+			for (P project : subProjectsView) {
 				if (!disabledSubProjects.contains(project.getName())) {
 					project.enable();
 				}
@@ -1392,7 +1398,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 				 * Remove template from branches directory if there isn't a
 				 * sub-project with the same name.
 				 */
-				if (!parent.getSubProjects().containsKey(TEMPLATE)) {
+
+				if (!parent.subProjects.containsKey(TEMPLATE)) {
 					try {
 						FileUtils.deleteDirectory(
 								new File(parent.getBranchesDir(), TEMPLATE));
