@@ -150,7 +150,7 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 		 */
 		@Override
 		public String getDisplayName() {
-			return "Sync Branches Log";
+			return Messages.SyncBranchesLog_DisplayName();
 		}
 
 		/**

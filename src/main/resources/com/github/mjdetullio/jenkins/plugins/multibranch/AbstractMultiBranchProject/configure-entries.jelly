@@ -35,7 +35,7 @@ THE SOFTWARE.
 		<f:textbox
 				checkUrl="'${rootURL}/checkDisplayName?displayName='+encodeURIComponent(this.value)+'&amp;jobName='+encodeURIComponent('${h.jsStringEscape(it.name)}')" />
 	</f:entry>
-	<f:entry title="Default view" field="defaultView">
+	<f:entry title="${%Default view}" field="defaultView">
 		<select class="setting-input" name="primaryView">
 			<j:forEach var="v" items="${it.views}">
 				<f:option selected="${it.primaryView==v}">
@@ -55,7 +55,7 @@ THE SOFTWARE.
 		</f:entry>
 
 		<f:optionalBlock field="allowAnonymousSync"
-				title="Allow anonymous trigger of branch sync"
+				title="${%Allow anonymous trigger of branch sync}"
 				checked="${it.allowAnonymousSync}" />
 
 		<j:set var="scms" value="${it.getSCMSourceDescriptors(true)}" />
