@@ -35,9 +35,9 @@ THE SOFTWARE.
 		}
 	</style>
 	<div id="noJobDiv">
-		No branches were found.
+		${%No branches were found.}
 		<j:if test="${it.hasPermission(it.CONFIGURE)}">
-			<a href="${rootURL}/${it.configureUrl}">Configure the project's SCM</a> to start generating sub-projects for each branch.
+            ${%ConfigureSCMMessage(rootURL, it.configureUrl)}
 		</j:if>
 	</div>
 </j:jelly>
