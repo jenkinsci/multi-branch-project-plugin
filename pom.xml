@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.mjdetullio.jenkins.plugins</groupId>
 	<artifactId>multi-branch-project-plugin</artifactId>
-	<version>0.2.3-SNAPSHOT</version>
+	<version>0.2.3</version>
 	<packaging>hpi</packaging>
 
 	<parent>
@@ -31,7 +31,7 @@
 		<connection>scm:git:git://github.com/mjdetullio/multi-branch-project-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:mjdetullio/multi-branch-project-plugin.git</developerConnection>
 		<url>https://github.com/mjdetullio/multi-branch-project-plugin</url>
-		<tag>HEAD</tag>
+		<tag>multi-branch-project-plugin-0.2.3</tag>
 	</scm>
 
 	<issueManagement>
