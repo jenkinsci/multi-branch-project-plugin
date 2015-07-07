@@ -28,9 +28,9 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form"
 		xmlns:p="/lib/hudson/project">
-	<f:section title="${%Per Sub-Project Options}">
-		<j:set var="instance" value="${it}" />
+	<j:set var="instance" value="${it}" />
 
+	<f:section title="${%Per Sub-Project Options}">
 		<j:if test="${it.supportsLogRotator()}">
 			<!-- log rotator -->
 			<f:optionalBlock name="logrotate"
