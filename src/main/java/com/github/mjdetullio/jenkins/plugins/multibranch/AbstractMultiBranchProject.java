@@ -366,6 +366,16 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 		// Will check triggers(), add & start default sync cron if not there
 		getSyncBranchesTrigger();
+
+		/*
+		 * Jenkins 1.621+ does not start the triggers when
+		 * isBuildable() == false, so always restart them here
+		 */
+		for (Trigger trigger : triggers()) {
+			trigger.stop();
+			//noinspection unchecked
+			trigger.start(this, false);
+		}
 	}
 
 	/**
