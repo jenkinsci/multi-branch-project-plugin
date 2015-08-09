@@ -70,7 +70,6 @@ public class MavenMultiBranchProject extends
 		return new MavenModuleSet(parent, branchName);
 	}
 
-	@Override
 	protected Class<MavenModuleSetBuild> getBuildClass() {
 		return MavenModuleSetBuild.class;
 	}
@@ -93,13 +92,7 @@ public class MavenMultiBranchProject extends
 	public FormValidation doCheckFileInWorkspace(@QueryParameter String value)
 			throws IOException,
 			ServletException {
-		MavenModuleSetBuild lb = getLastBuild();
-		if (lb != null) {
-			FilePath ws = lb.getModuleRoot();
-			if (ws != null) {
-				return ws.validateRelativePath(value, true, true);
-			}
-		}
+		// TODO probably not great
 		return FormValidation.ok();
 	}
 
