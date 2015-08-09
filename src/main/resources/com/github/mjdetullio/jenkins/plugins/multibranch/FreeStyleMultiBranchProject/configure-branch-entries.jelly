@@ -44,7 +44,7 @@ THE SOFTWARE.
 
 		<!-- job property configurations. This should have been <f:descriptorList> -->
 		<f:descriptorList field="properties"
-				descriptors="${h.getJobPropertyDescriptors(it.getClass())}"
+				descriptors="$[h.getJobPropertyDescriptors(it.getClass()).findAll { it.class != hudson.security.AuthorizationMatrixProperty.DescriptorImpl.class }]"
 				forceRowSet="true" />
 
 		<p:config-concurrentBuild />

@@ -53,6 +53,11 @@ import hudson.model.ViewGroupMixIn;
 import hudson.model.listeners.ItemListener;
 import hudson.model.listeners.SaveableListener;
 import hudson.scm.NullSCM;
+import hudson.security.ACL;
+import hudson.security.AuthorizationMatrixProperty;
+import hudson.security.AuthorizationStrategy;
+import hudson.security.ProjectMatrixAuthorizationStrategy;
+import hudson.security.SidACL;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
@@ -1368,6 +1373,37 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		checkPermission(CONFIGURE);
 		makeDisabled(false);
 		return new HttpRedirect(".");
+	}
+
+	/**
+	 * For project matrix auth, use custom implementation with ACL from
+	 * template project, otherwise infinite loops are all too possible.
+	 * For other auths, use super.getACL().
+	 * <p/>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ACL getACL() {
+		AuthorizationStrategy strategy =
+				Jenkins.getInstance().getAuthorizationStrategy();
+
+		AuthorizationMatrixProperty amp = templateProject.getProperty(
+				AuthorizationMatrixProperty.class);
+
+		if (strategy instanceof ProjectMatrixAuthorizationStrategy
+				&& amp != null) {
+			SidACL projectAcl = amp.getACL();
+
+			if (!amp.isBlocksInheritance()) {
+				projectAcl = projectAcl.newInheritingACL(
+						((ProjectMatrixAuthorizationStrategy) strategy).getACL(
+								getParent()));
+			}
+
+			return projectAcl;
+		}
+
+		return super.getACL();
 	}
 
 	@SuppressWarnings(UNUSED)
