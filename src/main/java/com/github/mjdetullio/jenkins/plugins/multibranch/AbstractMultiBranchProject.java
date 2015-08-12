@@ -70,6 +70,7 @@ import hudson.views.DefaultViewsTabBar;
 import hudson.views.ViewsTabBar;
 import jenkins.model.Jenkins;
 import jenkins.model.ProjectNamingStrategy;
+import jenkins.model.TransientActionFactory;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
@@ -88,6 +89,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -108,7 +110,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1422,16 +1423,35 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Adds {@link SyncBranchesTrigger.SyncBranchesAction} to the list of
+	 * actions on {@link AbstractMultiBranchProject}s, effectively showing it
+	 * on the sidepanel.  Takes the place of overriding the deprecated method
+	 * {@link AbstractItem#getActions()}.
 	 */
-	@Override
-	public List<Action> getActions() {
-		// add all the transient actions, too
-		List<Action> actions = new Vector<Action>(super.getActions());
-		actions.addAll(syncBranchesTrigger.getProjectActions());
+	@Extension
+	@SuppressWarnings(UNUSED)
+	public static class SyncBranchesTransientActionFactory extends
+			TransientActionFactory<AbstractMultiBranchProject> {
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public Class<AbstractMultiBranchProject> type() {
+			return AbstractMultiBranchProject.class;
+		}
 
-		// return the read only list to cause a failure on plugins who try to add an action here
-		return Collections.unmodifiableList(actions);
+		/**
+		 * {@inheritDoc}
+		 */
+		@Nonnull
+		@Override
+		public Collection<? extends Action> createFor(
+				@Nonnull AbstractMultiBranchProject target) {
+			if (target.getSyncBranchesTrigger() != null) {
+				return target.getSyncBranchesTrigger().getProjectActions();
+			}
+			return Collections.emptyList();
+		}
 	}
 
 	/**
