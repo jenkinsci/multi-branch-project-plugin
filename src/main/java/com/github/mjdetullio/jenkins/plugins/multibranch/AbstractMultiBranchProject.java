@@ -744,6 +744,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		}
 	}
 
+	// TODO support rename
+
+	// TODO support clone
+
 	/**
 	 * Overrides the {@link hudson.model.AbstractProject} implementation because
 	 * the user is not redirected to the parent properly for this project type.
@@ -766,6 +770,29 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			return;
 		}
 		rsp.sendRedirect2(req.getContextPath() + '/' + getParent().getUrl());
+	}
+
+	/**
+	 * Overrides the {@link hudson.model.AbstractItem} implementation to also
+	 * delete the subprojects before deleting this parent project.
+	 * <p/>
+	 * Inherited docs:
+	 * <p/>
+	 * {@inheritDoc}
+	 *
+	 * @throws IOException          - if problems
+	 * @throws InterruptedException - if problems
+	 */
+	@Override
+	public void delete() throws IOException, InterruptedException {
+		// Delete the subprojects first
+		for (P project : getSubProjects()) {
+			project.delete();
+		}
+		subProjects.clear();
+
+		// Do normal delete
+		super.delete();
 	}
 
 	/**
