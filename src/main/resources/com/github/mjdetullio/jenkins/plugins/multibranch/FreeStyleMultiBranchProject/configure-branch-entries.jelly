@@ -22,7 +22,7 @@ THE SOFTWARE.
 -->
 
 <!--
-  Parts of the configuration that applies to Project and MavenModuleSet.
+  Sub-project config
 -->
 
 <?jelly escape-by-default='true'?>
