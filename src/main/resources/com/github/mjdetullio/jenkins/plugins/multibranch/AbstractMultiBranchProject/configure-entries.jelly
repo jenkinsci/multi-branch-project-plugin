@@ -77,6 +77,11 @@ THE SOFTWARE.
 		</j:forEach>
 	</f:section>
 
-	<st:include it="${it.template}" from="${it}"
-			page="configure-branch-entries.jelly" />
+	<f:withCustomDescriptorByName value="${it.absoluteUrl}template">
+		<st:include it="${it.template}" from="${it}"
+				page="configure-branch-common.jelly" />
+
+		<st:include it="${it.template}" from="${it}"
+				page="configure-branch-entries.jelly" />
+	</f:withCustomDescriptorByName>
 </j:jelly>
