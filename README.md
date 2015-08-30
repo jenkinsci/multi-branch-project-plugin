@@ -51,12 +51,11 @@ issues with API that caused the switch back to an independent plugin:
 
 * The vision for this plugin is one consolidated configuration for all branches
   combined with support for the same build wrappers, builders, publishers, etc.
-  that you would see in the "stock" Jenkins project types.  In order for this to
-  be possible, the project class must extend ```AbstractProject``` (or its
-  sub-type ```Project```).  In the API, its ```MultiBranchProject``` class
-  extends ```AbstractItem```.  This prevents the use of all the
-  wrappers/builders/publishers from not just out-of-box Jenkins, but also the
-  community plugins, which is what makes Jenkins great.
+  that you would see in the "stock" Jenkins project types.  There does not seem
+  to be a clear way to do this with the API.  This plugin uses an internal
+  template project, whose XML is applied directly to the branch projects, making
+  it possible to use all the same wrappers, builders, and publishers (including
+  configuration from community plugins).
 * The API is still experimental (it has its fair share of _TODOs_ in the
   source).  This plugin aims to be suitable for a production environment as soon
   as possible, without dependencies on the progress of the API's development.
