@@ -27,17 +27,16 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core">
 	<style type="text/css">
 		#noJobDiv {
-		padding: 10px;
-		text-align: center;
-		border-width: 0px 1px 1px;
-		border-style: none solid solid;
-		border-color: #BBBBBB;
+			text-align: center;
+			padding: 1em;
 		}
 	</style>
-	<div id="noJobDiv">
-		${%No branches were found.}
-		<j:if test="${it.hasPermission(it.CONFIGURE)}">
-            ${%ConfigureSCMMessage(rootURL, it.configureUrl)}
-		</j:if>
+	<div class="pane-frame">
+		<div id="noJobDiv">
+			${%No branches were found.}
+			<j:if test="${it.hasPermission(it.CONFIGURE)}">
+				${%ConfigureSCMMessage(rootURL, it.configureUrl)}
+			</j:if>
+		</div>
 	</div>
 </j:jelly>

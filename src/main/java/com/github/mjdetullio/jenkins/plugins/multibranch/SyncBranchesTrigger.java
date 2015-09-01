@@ -23,32 +23,34 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.commons.jelly.XMLOutput;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import antlr.ANTLRException;
 import hudson.Extension;
 import hudson.Util;
 import hudson.console.AnnotatedLargeText;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Items;
+import hudson.model.PeriodicWork;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import hudson.util.StreamTaskListener;
+import jenkins.model.Jenkins;
+import org.apache.commons.jelly.XMLOutput;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * An internal cron-based trigger used to sync branches (sub-projects) for
@@ -62,6 +64,8 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 
 	private static final String UNUSED = "unused";
 
+	private static final String DEFAULT_SYNC_SPEC = "H/5 * * * *";
+
 	/**
 	 * Creates a new {@link SyncBranchesTrigger} that gets {@link #run() run}
 	 * periodically.
@@ -70,7 +74,7 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 	 */
 	@DataBoundConstructor
 	public SyncBranchesTrigger(String cronTabSpec) throws ANTLRException {
-		super(cronTabSpec);
+		super(cronTabSpec == null ? DEFAULT_SYNC_SPEC : cronTabSpec);
 	}
 
 	/**
@@ -133,8 +137,8 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 		 * @return action owner
 		 */
 		@SuppressWarnings(UNUSED)
-		public AbstractProject<?, ?> getOwner() {
-			return job.asProject();
+		public Item getOwner() {
+			return job;
 		}
 
 		/**
@@ -173,7 +177,10 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 
 		/**
 		 * Writes the annotated log to the given output.
+		 * <p/>
+		 * Used by index.jelly to display the log.
 		 */
+		@SuppressWarnings(UNUSED)
 		public void writeLogTo(XMLOutput out) throws IOException {
 			new AnnotatedLargeText<SyncBranchesAction>(getLogFile(),
 					Charset.defaultCharset(), true, this).writeHtmlTo(0,
@@ -203,6 +210,56 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 		@Override
 		public String getDisplayName() {
 			return SyncBranchesTrigger.class.getSimpleName();
+		}
+	}
+
+	@Extension
+	@SuppressWarnings(UNUSED)
+	public static class Cron extends PeriodicWork {
+		private final Calendar cal = new GregorianCalendar();
+
+		public long getRecurrencePeriod() {
+			return MIN;
+		}
+
+		public void doRun() {
+			while (new Date().getTime() - cal.getTimeInMillis() > 1000) {
+				LOGGER.fine("cron checking " + cal.getTime());
+
+				try {
+					checkTriggers(cal);
+				} catch (Throwable e) {
+					LOGGER.log(Level.WARNING, "Cron thread throw an exception",
+							e);
+					// bug in the code. Don't let the thread die.
+					e.printStackTrace();
+				}
+
+				cal.add(Calendar.MINUTE, 1);
+			}
+		}
+	}
+
+	public static void checkTriggers(Calendar cal) {
+		// Process all SyncBranchesTriggers
+		for (AbstractMultiBranchProject<?, ?> p : Jenkins.getInstance()
+				.getAllItems(AbstractMultiBranchProject.class)) {
+			SyncBranchesTrigger t = p.getSyncBranchesTrigger();
+
+			LOGGER.fine("cron checking " + p.getName());
+
+			if (t.tabs.check(cal)) {
+				LOGGER.config("cron triggered " + p.getName());
+
+				try {
+					t.run();
+				} catch (Throwable e) {
+					// t.run() is a plugin, and some of them throw RuntimeException and other things.
+					// don't let that cancel the polling activity. report and move on.
+					LOGGER.log(Level.WARNING, t.getClass().getName() +
+							".run() failed for " + p.getName(), e);
+				}
+			}
 		}
 	}
 

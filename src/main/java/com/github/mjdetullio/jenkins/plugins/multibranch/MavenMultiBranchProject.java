@@ -23,33 +23,29 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.servlet.ServletException;
-
-import org.kohsuke.stapler.QueryParameter;
-
-import hudson.FilePath;
+import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.maven.MavenModuleSet;
 import hudson.maven.MavenModuleSetBuild;
+import hudson.model.AbstractProject;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
+import hudson.model.TopLevelItem;
 import hudson.model.TopLevelItemDescriptor;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.QueryParameter;
+
+import javax.servlet.ServletException;
+import java.io.IOException;
 
 /**
  * @author Matthew DeTullio
  */
+@SuppressWarnings("unused")
 public class MavenMultiBranchProject extends
 		AbstractMultiBranchProject<MavenModuleSet, MavenModuleSetBuild> {
-
-	private static final String CLASSNAME = MavenMultiBranchProject.class.getName();
-	private static final Logger LOGGER = Logger.getLogger(CLASSNAME);
 
 	private static final String UNUSED = "unused";
 
@@ -70,16 +66,15 @@ public class MavenMultiBranchProject extends
 		return new MavenModuleSet(parent, branchName);
 	}
 
-	@Override
+	@SuppressWarnings(UNUSED)
 	protected Class<MavenModuleSetBuild> getBuildClass() {
 		return MavenModuleSetBuild.class;
 	}
 
 	@Override
 	public TopLevelItemDescriptor getDescriptor() {
-		//		return (DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(
-		//				MavenMultiBranchProject.class);
-		return null;
+		return (DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(
+				MavenMultiBranchProject.class);
 	}
 
 	/**
@@ -93,38 +88,32 @@ public class MavenMultiBranchProject extends
 	public FormValidation doCheckFileInWorkspace(@QueryParameter String value)
 			throws IOException,
 			ServletException {
-		MavenModuleSetBuild lb = getLastBuild();
-		if (lb != null) {
-			FilePath ws = lb.getModuleRoot();
-			if (ws != null) {
-				return ws.validateRelativePath(value, true, true);
-			}
-		}
+		// Probably not great
 		return FormValidation.ok();
 	}
 
-	// Commented out descriptor to disable this project type.
-	//	/**
-	//	 * Our project's descriptor.
-	//	 */
-	//	@Extension
-	//	public static class DescriptorImpl extends AbstractProjectDescriptor {
-	//		/**
-	//		 * {@inheritDoc}
-	//		 */
-	//		@Override
-	//		public String getDisplayName() {
-	//			return Messages.MavenMultiBranchProject_DisplayName();
-	//		}
-	//
-	//		/**
-	//		 * {@inheritDoc}
-	//		 */
-	//		@Override
-	//		public TopLevelItem newInstance(ItemGroup parent, String name) {
-	//			return new MavenMultiBranchProject(parent, name);
-	//		}
-	//	}
+	/**
+	 * Our project's descriptor.
+	 */
+	@Extension
+	public static class DescriptorImpl extends
+			AbstractProject.AbstractProjectDescriptor {
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public String getDisplayName() {
+			return Messages.MavenMultiBranchProject_DisplayName();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public TopLevelItem newInstance(ItemGroup parent, String name) {
+			return new MavenMultiBranchProject(parent, name);
+		}
+	}
 
 	/**
 	 * Gives this class an alias for configuration XML.

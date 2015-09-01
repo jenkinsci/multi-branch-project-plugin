@@ -3,13 +3,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.mjdetullio.jenkins.plugins</groupId>
 	<artifactId>multi-branch-project-plugin</artifactId>
-	<version>0.2.5-SNAPSHOT</version>
+	<version>0.3.1-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
 	<parent>
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>plugin</artifactId>
-		<version>1.532.3</version>
+		<version>1.554.3</version>
 	</parent>
 
 	<name>Multi-Branch Project Plugin</name>
@@ -81,6 +81,12 @@
 			<groupId>org.jenkins-ci.main</groupId>
 			<artifactId>maven-plugin</artifactId>
 			<version>2.0</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>matrix-auth</artifactId>
+			<version>1.2</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

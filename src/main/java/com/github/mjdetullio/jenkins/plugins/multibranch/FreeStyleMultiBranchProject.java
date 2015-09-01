@@ -26,6 +26,7 @@ package com.github.mjdetullio.jenkins.plugins.multibranch;
 import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
+import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ItemGroup;
@@ -37,6 +38,7 @@ import jenkins.model.Jenkins;
 /**
  * @author Matthew DeTullio
  */
+@SuppressWarnings("unused")
 public class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
 		<FreeStyleProject, FreeStyleBuild> {
 
@@ -71,7 +73,6 @@ public class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	protected Class<FreeStyleBuild> getBuildClass() {
 		return FreeStyleBuild.class;
 	}
@@ -80,7 +81,8 @@ public class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
 	 * Our project's descriptor.
 	 */
 	@Extension
-	public static class DescriptorImpl extends AbstractProjectDescriptor {
+	public static class DescriptorImpl extends
+			AbstractProject.AbstractProjectDescriptor {
 		/**
 		 * {@inheritDoc}
 		 */
