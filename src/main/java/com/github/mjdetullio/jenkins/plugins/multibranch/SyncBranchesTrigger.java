@@ -82,6 +82,10 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 	 */
 	@Override
 	public void run() {
+		run(false);
+	}
+
+	public void run(boolean forceSync) {
 		/*
 		 * The #start(Item, boolean) method provides the job so this will be null
 		 * only when invoked directly before starting.
@@ -99,7 +103,7 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 					"Started on " + DateFormat.getDateTimeInstance().format(
 							new Date()));
 
-			job.syncBranches(listener);
+			job.syncBranches(listener, forceSync);
 
 			listener.getLogger().println("Done. Took " + Util.getTimeSpanString(
 					System.currentTimeMillis() - start));
