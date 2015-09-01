@@ -118,6 +118,7 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 /**
  * @author Matthew DeTullio
+ * @author Hiroyuki Wada
  */
 public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B> & TopLevelItem, B extends AbstractBuild<P, B>>
 		extends AbstractItem
@@ -156,6 +157,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	protected volatile SyncBranchesTrigger syncBranchesTrigger;
 
 	private boolean allowAnonymousSync;
+
+	private boolean disableProjectDeletion;
+
+	private List<String> deletedBranches;
 
 	protected volatile SCMSource scmSource;
 
@@ -320,6 +325,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 		if (disabledSubProjects == null) {
 			disabledSubProjects = new PersistedList<String>(this);
+		}
+
+		if (deletedBranches == null) {
+			deletedBranches = new PersistedList<String>(this);
 		}
 
 		if (views == null) {
@@ -703,6 +712,17 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		save();
 	}
 
+	@SuppressWarnings(UNUSED)
+	public boolean isDisableProjectDeletion() {
+		return disableProjectDeletion;
+	}
+
+	@SuppressWarnings(UNUSED)
+	public void setDisableProjectDeletion(boolean b) throws IOException {
+		disableProjectDeletion = b;
+		save();
+	}
+
 	/**
 	 * Stapler URL binding for creating views for our branch projects.  Unlike
 	 * normal views, this only requires permission to configure the project, not
@@ -826,6 +846,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		makeDisabled(req.getParameter("disable") != null);
 
 		allowAnonymousSync = req.getSubmittedForm().has("allowAnonymousSync");
+		disableProjectDeletion = req.getSubmittedForm().has("disableProjectDeletion");
 
 		try {
 			JSONObject json = req.getSubmittedForm();
@@ -997,29 +1018,52 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 				} catch (Throwable e) {
 					e.printStackTrace(listener.fatalError(e.getMessage()));
 				}
+			} else if (deletedBranches.contains(branchName)) {
+				// Enable the sub-projects for branches that was deleted before with disable project deletion option
+				P p = subProjects.get(branchName);
+				if (p.isDisabled()) {
+					listener.getLogger().println(
+							"Enable project for branch " + branchName + " that is deleted before");
+					p.enable();
+					// For trigger build
+					newBranches.add(branchName);
+				}
+				deletedBranches.remove(branchName);
 			}
 		}
 
-		// Delete all the sub-projects for branches that no longer exist
+		// Delete or disable all the sub-projects for branches that no longer exist
 
 		Set<String> projectBranchesToRemove = getCurrentBranchNames();
 		projectBranchesToRemove.removeAll(branches.keySet());
 		for (String branchName : projectBranchesToRemove) {
-			listener.getLogger().println(
-					"Deleting project for branch " + branchName);
-
-			try {
-				P project = subProjects.remove(branchName);
-				project.delete();
-			} catch (Throwable e) {
-				e.printStackTrace(listener.fatalError(e.getMessage()));
+			if (!isDisableProjectDeletion()) {
+				listener.getLogger().println(
+						"Deleting project for branch " + branchName);
+				try {
+					P project = subProjects.remove(branchName);
+					project.delete();
+				} catch (Throwable e) {
+					e.printStackTrace(listener.fatalError(e.getMessage()));
+				}
+			} else {
+				listener.getLogger().println(
+						"Disable project for branch " + branchName);
+				P project = subProjects.get(branchName);
+				project.disable();
+				if (!deletedBranches.contains(branchName)) {
+					deletedBranches.add(branchName);
+				}
 			}
 		}
-
 
 		// Sync config for existing branch projects
 		XmlFile configFile = templateProject.getConfigFile();
 		for (P project : getSubProjects()) {
+			// Ignore sync if the sub-project was deleted with disable project deletion option
+			if (deletedBranches.contains(project.getName())) {
+				continue;
+			}
 			listener.getLogger().println(
 					"Syncing configuration to project for branch "
 							+ project.getName());
