@@ -64,6 +64,7 @@ THE SOFTWARE.
 				<div class="warning">${%No compatible SCMs found. Try installing an SCM plugin that implements jenkins.scm.api.SCMSource.}</div>
 			</f:block>
 		</j:if>
+		
 		<j:forEach var="idx" begin="0" end="${size(scms)-1}">
 			<j:set var="descriptor" value="${scms[idx]}" />
 			<f:radioBlock name="scmSource" value="${idx}"
@@ -73,6 +74,23 @@ THE SOFTWARE.
 						value="${it.getSCMSource().descriptor==descriptor ? it.getSCMSource() : null}" />
 				<st:include from="${descriptor}"
 						page="${descriptor.configPage}" />
+
+				<j:set var="descriptor" value="${it.getSCMDescriptor(descriptor)}" />
+				<j:set var="instance" value="${it.getSCMOptions() != null ? it.getSCMOptions().getSCMTemplate() : null}" />
+				<j:set var="scmd" value="${descriptor}" />
+				<j:set var="scm" value="${instance}" />
+				<f:rowSet name="scmOptions">
+					<f:invisibleEntry>
+						<div style="display:none;">
+							<f:textbox name="kind" value="${descriptor.getClass().getName()}" />
+						</div>
+					</f:invisibleEntry>
+					
+					<j:catch>
+						<st:include from="${it}"
+							page="configure-entries-${descriptor.getDisplayName().toLowerCase()}.jelly" />
+					</j:catch>
+				</f:rowSet>
 			</f:radioBlock>
 		</j:forEach>
 	</f:section>
