@@ -52,7 +52,9 @@ import hudson.model.ViewGroup;
 import hudson.model.ViewGroupMixIn;
 import hudson.model.listeners.ItemListener;
 import hudson.model.listeners.SaveableListener;
+import hudson.scm.SCMDescriptor;
 import hudson.scm.NullSCM;
+import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.security.AuthorizationMatrixProperty;
 import hudson.security.AuthorizationStrategy;
@@ -156,6 +158,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	protected volatile SyncBranchesTrigger syncBranchesTrigger;
 
 	private boolean allowAnonymousSync;
+
+	protected volatile SCMOptions scmOptions;
 
 	protected volatile SCMSource scmSource;
 
@@ -683,6 +687,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		return scmSource;
 	}
 
+	@SuppressWarnings(UNUSED)
+	public SCMOptions getSCMOptions() {
+		return scmOptions;
+	}
+
 	/**
 	 * Gets whether anonymous sync is allowed from <code>${JOB_URL}/syncBranches</code>
 	 */
@@ -852,6 +861,16 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 						value);
 				scmSource = descriptor.newInstance(req, scmSourceJson);
 				scmSource.setOwner(this);
+			}
+
+			// Handle scm options
+			JSONObject scmOptionsObject= scmSourceJson.optJSONObject("scmOptions");
+
+			SCMDescriptor<?> scmDescriptor = getSCMDescriptor(scmSource.getDescriptor());
+			String clazz = scmOptionsObject.getString("kind");
+			if (clazz.equals(scmDescriptor.getClass().getName())) {
+				SCM scm = scmDescriptor.newInstance(req, scmOptionsObject);
+				scmOptions = new SCMOptions(scm);
 			}
 
 			templateProject.doConfigSubmit(
@@ -1036,7 +1055,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 				 * remains null (or NullSCM).
 				 */
 				project.setScm(
-						scmSource.build(branches.get(project.getName())));
+						applySCMOptionsTemplate(scmSource.build(branches.get(project.getName()))));
 
 				if (!wasDisabled) {
 					project.enable();
@@ -1072,6 +1091,13 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 				e.printStackTrace(listener.fatalError(e.getMessage()));
 			}
 		}
+	}
+
+	private SCM applySCMOptionsTemplate(SCM scm) throws Exception {
+		if (scmOptions != null) {
+			scmOptions.apply(scm);
+		}
+		return scm;
 	}
 
 	/**
@@ -1513,6 +1539,20 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		}
 
 		return descriptors;
+	}
+
+	/**
+	 * Returns a SCMDescriptor for a SCMSourceDescriptor.
+	 * Used by configure-entries.jelly.
+	 */
+	public SCMDescriptor<?> getSCMDescriptor(Descriptor<?> scmSourceDescriptor) {
+		for (SCMDescriptor<?> scm : SCM._for(templateProject)) {
+			if (scm.getDisplayName().equals(
+					scmSourceDescriptor.getDisplayName())) {
+				return scm;
+			}
+		}
+		return null;
 	}
 
 	/**
