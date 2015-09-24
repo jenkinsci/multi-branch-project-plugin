@@ -58,6 +58,10 @@ THE SOFTWARE.
 				title="${%Allow anonymous trigger of branch sync}"
 				checked="${it.allowAnonymousSync}" />
 
+		<f:optionalBlock field="suppressTriggerNewBranchBuild"
+				title="${%Suppress trigger build after discovering new branches}"
+				checked="${it.suppressTriggerNewBranchBuild}" />
+
 		<j:set var="scms" value="${it.getSCMSourceDescriptors(true)}" />
 		<j:if test="${empty(scms)}">
 			<f:block>
