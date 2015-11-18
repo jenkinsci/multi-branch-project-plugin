@@ -92,18 +92,33 @@ THE SOFTWARE.
 							 title="${%Disable automatic artifact archiving}"
 							 help="/plugin/maven-plugin/archivingDisabled.html"
 							 checked="${it.isArchivingDisabled()}" />
-			<f:optionalBlock name="maven.disableTriggerDownstreamProjects"
-							 title="${%Disable triggering of downstream projects}"
+			<f:optionalBlock name="maven.siteArchivingDisabled"
+							 title="${%Disable automatic site documentation artifact archiving}"
+							 help="/plugin/maven-plugin/siteArchivingDisabled.html"
+							 checked="${it.isSiteArchivingDisabled()}" />
+			<f:optionalBlock name="maven.fingerprintingDisabled"
+							 title="${%Disable automatic fingerprinting of consumed and produced artifacts}"
+							 help="/plugin/maven-plugin/fingerprintingDisabled.html"
+							 checked="${it.isFingerprintingDisabled()}" />
+			<f:optionalBlock name="maven.enableTriggerDownstreamProjects"
+							 title="${%Enable triggering of downstream projects}"
 							 help="/plugin/maven-plugin/downstreamDisabled.html"
-							 checked="${it.isDisableTriggerDownstreamProjects()}" />
+							 checked="${!it.disableTriggerDownstreamProjects}">
+				<f:nested>
+					<table width="100%">
+						<f:optionalBlock name="maven.blockTriggerWhenBuilding"
+										 title="${%Block downstream trigger when building}"
+										 help="/plugin/maven-plugin/blockTriggerWhenBuilding.html"
+										 checked="${it.blockTriggerWhenBuilding}"/>
+					</table>
+				</f:nested>
+			</f:optionalBlock>
 			<f:optionalBlock name="maven.perModuleBuild" title="${%Build modules in parallel}" help="/plugin/maven-plugin/aggregator.html"
 							 checked="${!it.aggregatorStyleBuild}" />
 			<f:optionalBlock name="maven.usePrivateRepository" title="${%Use private Maven repository}" help="/plugin/maven-plugin/private-repository.html"
 							 checked="${it.getExplicitLocalRepository()!=null}" inline="true">
 				<f:dropdownDescriptorSelector title="${%Strategy}" field="explicitLocalRepository" />
 			</f:optionalBlock>
-			<f:optionalBlock name="maven.perModuleEmail" title="${%Send e-mail for each failed module}" help="/plugin/maven-plugin/per-module-email.html"
-							 checked="${it.isPerModuleEmail()}" />
 			<f:optionalBlock name="maven.resolveDependencies" title="${%Resolve Dependencies during Pom parsing}"
 							 checked="${it.isResolveDependencies()}" />
 			<f:optionalBlock name="maven.runHeadless" title="${%Run Headless}" help="/plugin/maven-plugin/run-headless.html"
