@@ -90,6 +90,8 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
@@ -107,6 +109,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
@@ -175,8 +178,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			throws IOException {
 		super.onLoad(parent, name);
 		runTriggerMigration();
-		// TODO runBranchProjectEncodedNameMigration();
 		init();
+		runDisabledSubProjectNameMigration();
 	}
 
 	private synchronized void runTriggerMigration() {
@@ -251,11 +254,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		};
 
 		try {
-			if (!(new File(getTemplateDir(), "config.xml").isFile())) {
-				templateProject = createNewSubProject(this, TEMPLATE);
-			} else {
+			if (new File(getTemplateDir(), "config.xml").isFile()) {
 				//noinspection unchecked
 				templateProject = (P) Items.load(this, getTemplateDir());
+			} else {
+				templateProject = createNewSubProject(this, TEMPLATE);
 			}
 
 			// Prevent tampering
@@ -281,7 +284,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 				for (File branch : branchDirs) {
 					try {
 						Item item = (Item) Items.getConfigFile(branch).read();
-						item.onLoad(this, rawDecode(branch.getName()));
+						item.onLoad(this, branch.getName());
 
 						//noinspection unchecked
 						P project = (P) item;
@@ -316,6 +319,26 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		} catch (IOException e) {
 			throw new IllegalArgumentException(
 					"Failed to instantiate SyncBranchesTrigger", e);
+		}
+	}
+
+	private void runDisabledSubProjectNameMigration() {
+		ListIterator<String> iterator = disabledSubProjects.listIterator();
+		while (iterator.hasNext()) {
+			String disabledSubProject = iterator.next();
+
+			if (getItem(disabledSubProject) == null) {
+				// Didn't find item, remove it
+				iterator.remove();
+
+				// Do we have the encoded item though?
+				String encoded = Util.rawEncode(disabledSubProject);
+
+				if (getItem(encoded) != null) {
+					// Found encoded item, re-add encoded name
+					iterator.add(encoded);
+				}
+			}
 		}
 	}
 
@@ -420,13 +443,12 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 */
 	@Override
 	public File getRootDirFor(P child) {
-		// Null SCM should be the template
-		if (child.getScm() == null || child.getScm() instanceof NullSCM) {
+		if (child.equals(templateProject)) {
 			return getTemplateDir();
 		}
 
 		// All others are branches
-		return new File(getBranchesDir(), Util.rawEncode(child.getName()));
+		return new File(getBranchesDir(), child.getName());
 	}
 
 	/**
@@ -901,16 +923,28 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		Set<String> newBranches = new HashSet<String>();
 		for (SCMHead head : heads) {
 			String branchName = head.getName();
-			branches.put(branchName, head);
+			String branchNameEncoded = Util.rawEncode(branchName);
 
-			if (!subProjects.containsKey(branchName)) {
+			listener.getLogger().println("Branch " + branchName +
+					" encoded to " + branchNameEncoded);
+
+			branches.put(branchNameEncoded, head);
+
+			if (!subProjects.containsKey(branchNameEncoded)) {
 				// Add new projects
 				listener.getLogger().println(
-						"Creating project for branch " + branchName);
+						"Creating project for branch " + branchNameEncoded);
 				try {
-					subProjects.put(branchName,
-							createNewSubProject(this, branchName));
-					newBranches.add(branchName);
+					P newProject = createNewSubProject(this,
+							branchNameEncoded);
+
+					if (!branchName.equals(branchNameEncoded)) {
+						newProject.setDisplayName(branchName);
+					}
+
+					subProjects.put(branchNameEncoded, newProject);
+
+					newBranches.add(branchNameEncoded);
 				} catch (Throwable e) {
 					e.printStackTrace(listener.fatalError(e.getMessage()));
 				}
@@ -943,7 +977,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			try {
 				boolean wasDisabled = project.isDisabled();
 
-				configFile.unmarshal(project);
+				project.updateByXml(
+						(Source) new StreamSource(configFile.readRaw()));
 
 				/*
 				 * Build new SCM with the URL and branch already set.
@@ -1499,8 +1534,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 					(AbstractMultiBranchProject) item.getParent();
 			AbstractProject template = parent.getTemplate();
 
-			// Direct memory reference comparison
-			if (item == template) {
+			if (item.equals(template)) {
 				try {
 					if (!(template.getScm() instanceof NullSCM)) {
 						template.setScm(new NullSCM());
