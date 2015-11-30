@@ -73,7 +73,7 @@ public class MavenMultiBranchProject extends
 
 	@Override
 	public TopLevelItemDescriptor getDescriptor() {
-		return (DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(
+		return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(
 				MavenMultiBranchProject.class);
 	}
 

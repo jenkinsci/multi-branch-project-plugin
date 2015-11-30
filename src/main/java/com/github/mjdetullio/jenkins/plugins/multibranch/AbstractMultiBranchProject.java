@@ -264,15 +264,21 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 					getFullName() + '/' + subProjectDir.getName();
 
 			// Replacement mirrors jenkins.model.Jenkins#expandVariablesForDirectory
-			File[] builds = new File(Util.replaceMacro(
-					Jenkins.getInstance().getRawBuildsDir(),
+			String buildsPath = Util.replaceMacro(
+					Jenkins.getActiveInstance().getRawBuildsDir(),
 					ImmutableMap.of(
 							"JENKINS_HOME",
-							Jenkins.getInstance().getRootDir().getPath(),
+							Jenkins.getActiveInstance().getRootDir().getPath(),
 							"ITEM_ROOTDIR", subProjectDir.getPath(),
 							"ITEM_FULLNAME", branchFullName,
 							"ITEM_FULL_NAME", branchFullName.replace(':', '$')
-					))).listFiles();
+					));
+
+			if (buildsPath == null) {
+				continue;
+			}
+
+			File[] builds = new File(buildsPath).listFiles();
 
 			if (builds == null) {
 				continue;
@@ -378,29 +384,41 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		}
 
 		if (getBranchesDir().isDirectory()) {
-			for (File branch : getBranchesDir().listFiles(new FileFilter() {
+			File[] branchDirs = getBranchesDir().listFiles(new FileFilter() {
 				@Override
 				public boolean accept(File pathname) {
 					return pathname.isDirectory() && new File(pathname,
 							"config.xml").isFile();
 				}
-			})) {
-				try {
-					Item item = (Item) Items.getConfigFile(branch).read();
-					item.onLoad(this, rawDecode(branch.getName()));
+			});
 
-					//noinspection unchecked
-					P project = (P) item;
+			if (branchDirs != null) {
+				for (File branch : branchDirs) {
+					try {
+						Item item = (Item) Items.getConfigFile(branch).read();
+						item.onLoad(this, rawDecode(branch.getName()));
 
-					subProjects.put(item.getName(), project);
+						//noinspection unchecked
+						P project = (P) item;
+						subProjects.put(item.getName(), project);
 
-					// Handle offline tampering of disabled setting
-					if (isDisabled() && !project.isDisabled()) {
-						project.disable();
+						// Migration
+						if (project.getDisplayNameOrNull() == null) {
+							String projectNameDecoded = rawDecode(project.getName());
+
+							if (!project.getName().equals(projectNameDecoded)) {
+								project.setDisplayName(projectNameDecoded);
+							}
+						}
+
+						// Handle offline tampering of disabled setting
+						if (isDisabled() && !project.isDisabled()) {
+							project.disable();
+						}
+					} catch (IOException e) {
+						LOGGER.log(Level.WARNING,
+								"Failed to load branch project " + branch, e);
 					}
-				} catch (IOException e) {
-					LOGGER.log(Level.WARNING,
-							"Failed to load branch project " + branch, e);
 				}
 			}
 		}
@@ -876,7 +894,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 			String newName = req.getParameter("name");
 			final ProjectNamingStrategy namingStrategy =
-					Jenkins.getInstance().getProjectNamingStrategy();
+					Jenkins.getActiveInstance().getProjectNamingStrategy();
 			if (newName != null && !newName.equals(name)) {
 				// check this error early to avoid HTTP response splitting.
 				Jenkins.checkGoodName(newName);
@@ -908,10 +926,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		//region AbstractProject mirror
 
 		// notify the queue as the project might be now tied to different node
-		Jenkins.getInstance().getQueue().scheduleMaintenance();
+		Jenkins.getActiveInstance().getQueue().scheduleMaintenance();
 
 		// this is to reflect the upstream build adjustments done above
-		Jenkins.getInstance().rebuildDependencyGraphAsync();
+		Jenkins.getActiveInstance().rebuildDependencyGraphAsync();
 		//endregion AbstractProject mirror
 
 		// TODO run this separately since it can block completion (user redirect) if unable to fetch from repository
@@ -1068,10 +1086,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		}
 
 		// notify the queue as the projects might be now tied to different node
-		Jenkins.getInstance().getQueue().scheduleMaintenance();
+		Jenkins.getActiveInstance().getQueue().scheduleMaintenance();
 
 		// this is to reflect the upstream build adjustments done above
-		Jenkins.getInstance().rebuildDependencyGraphAsync();
+		Jenkins.getActiveInstance().rebuildDependencyGraphAsync();
 
 		// Trigger build for new branches
 		if (!suppressTriggerNewBranchBuild) {
@@ -1426,9 +1444,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Nonnull
 	public ACL getACL() {
 		AuthorizationStrategy strategy =
-				Jenkins.getInstance().getAuthorizationStrategy();
+				Jenkins.getActiveInstance().getAuthorizationStrategy();
 
 		AuthorizationMatrixProperty amp = templateProject.getProperty(
 				AuthorizationMatrixProperty.class);
@@ -1503,7 +1522,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	@SuppressWarnings(UNUSED)
 	public static List<ViewDescriptor> getViewDescriptors() {
 		return Collections.singletonList(
-				(ViewDescriptor) Jenkins.getInstance().getDescriptorByType(
+				(ViewDescriptor) Jenkins.getActiveInstance().getDescriptorByType(
 						BranchListView.DescriptorImpl.class));
 	}
 

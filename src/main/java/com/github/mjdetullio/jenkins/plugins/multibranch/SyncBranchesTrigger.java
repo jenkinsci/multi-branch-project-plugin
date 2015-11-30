@@ -242,7 +242,7 @@ public class SyncBranchesTrigger extends Trigger<AbstractMultiBranchProject> {
 
 	public static void checkTriggers(Calendar cal) {
 		// Process all SyncBranchesTriggers
-		for (AbstractMultiBranchProject<?, ?> p : Jenkins.getInstance()
+		for (AbstractMultiBranchProject<?, ?> p : Jenkins.getActiveInstance()
 				.getAllItems(AbstractMultiBranchProject.class)) {
 			SyncBranchesTrigger t = p.getSyncBranchesTrigger();
 

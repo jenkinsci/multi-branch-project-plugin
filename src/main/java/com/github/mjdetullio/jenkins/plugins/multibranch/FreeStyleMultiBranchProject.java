@@ -66,7 +66,7 @@ public class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
 	 */
 	@Override
 	public TopLevelItemDescriptor getDescriptor() {
-		return (DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(
+		return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(
 				FreeStyleMultiBranchProject.class);
 	}
 
