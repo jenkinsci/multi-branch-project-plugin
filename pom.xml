@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>plugin</artifactId>
-		<version>1.596.1</version>
+		<version>1.609.1</version>
 	</parent>
 
 	<name>Multi-Branch Project Plugin</name>
@@ -77,6 +77,11 @@
 			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>scm-api</artifactId>
 			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>cloudbees-folder</artifactId>
+			<version>5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.main</groupId>

@@ -25,16 +25,25 @@ package com.github.mjdetullio.jenkins.plugins.multibranch;
 
 import javax.servlet.ServletException;
 
+import hudson.DescriptorExtensionList;
+import hudson.triggers.Trigger;
+import hudson.triggers.TriggerDescriptor;
 import org.kohsuke.stapler.RequestImpl;
 import org.kohsuke.stapler.StaplerRequest;
 
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
+ * Prevents configuration of {@link AbstractMultiBranchProject}s from bleeding
+ * into their template projects when the request is passed to the template's
+ * {@link hudson.model.AbstractProject#doConfigSubmit(StaplerRequest, StaplerResponse)}
+ * method.
+ *
  * @author Matthew DeTullio
  */
-public class TemplateStaplerRequestWrapper extends RequestImpl {
-	public TemplateStaplerRequestWrapper(StaplerRequest request)
+public final class TemplateStaplerRequestWrapper extends RequestImpl {
+	/*package*/ TemplateStaplerRequestWrapper(StaplerRequest request)
 			throws ServletException {
 		/*
 		 * Ugly casts to RequestImpl... but should be ok since it will throw
@@ -55,6 +64,7 @@ public class TemplateStaplerRequestWrapper extends RequestImpl {
 	 * the configuration for template projects.  Otherwise, relies on the
 	 * standard implementation. <p/> Inherited docs: <p/> {@inheritDoc}
 	 */
+	@Override
 	public String getParameter(String name) {
 		// Sanitize the following parameters
 		if ("name".equals(name)) {
@@ -68,7 +78,54 @@ public class TemplateStaplerRequestWrapper extends RequestImpl {
 			return "";
 		}
 
+		/*
+		 * Parameters for conflicting triggers should return null if the
+		 * corresponding JSON was not provided.  Otherwise, NPEs occur when
+		 * trying to update the triggers for the template project.
+		 */
+		DescriptorExtensionList<Trigger<?>,TriggerDescriptor> triggerDescriptors = Trigger.all();
+		for (TriggerDescriptor triggerDescriptor : triggerDescriptors) {
+			String jsonName = triggerDescriptor.getJsonSafeClassName();
+
+			try {
+				if (name.equals(jsonName)
+						&& getSubmittedForm().getJSONObject(jsonName).isNullObject()) {
+					return null;
+				}
+			} catch (ServletException e) {
+				throw new IllegalStateException(
+						"Exception getting data from submitted JSON", e);
+			}
+		}
+
 		// Fallback to standard functionality
 		return super.getParameter(name);
+	}
+
+	/**
+	 * Overrides the form with a sanitized version.
+	 * <p/>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public JSONObject getSubmittedForm() throws ServletException {
+		JSONObject json = super.getSubmittedForm();
+
+		// Don't set the name
+		json.remove("name");
+
+		// Don't set the display name
+		json.remove("displayNameOrNull");
+
+		// Don't set the description
+		json.remove("description");
+
+		// Don't change the disabled state
+		json.remove("disable");
+
+		// Don't send conflicting triggers
+		json.remove("syncBranchesTriggers");
+
+		return json;
 	}
 }

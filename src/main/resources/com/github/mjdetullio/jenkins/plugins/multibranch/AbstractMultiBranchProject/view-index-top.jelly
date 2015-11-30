@@ -23,10 +23,12 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
-	<h1>${it.pronoun} ${it.displayName}</h1>
-	<j:if test="${it.name!=it.displayName}">
-		${%Project name}: ${it.fullName}
-	</j:if>
-	<t:editableDescription permission="${it.CONFIGURE}" />
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+    <st:include it="${it}"
+                class="com.cloudbees.hudson.plugins.folder.AbstractFolder"
+                page="view-index-top" />
+
+    <st:include it="${it}"
+                class="hudson.model.AbstractProject"
+                page="makeDisabled" />
 </j:jelly>

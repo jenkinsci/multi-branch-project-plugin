@@ -23,16 +23,15 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
+import com.cloudbees.hudson.plugins.folder.AbstractFolderDescriptor;
 import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.maven.MavenModuleSet;
 import hudson.maven.MavenModuleSetBuild;
-import hudson.model.AbstractProject;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.TopLevelItem;
-import hudson.model.TopLevelItemDescriptor;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.QueryParameter;
@@ -44,7 +43,7 @@ import java.io.IOException;
  * @author Matthew DeTullio
  */
 @SuppressWarnings("unused")
-public class MavenMultiBranchProject extends
+public final class MavenMultiBranchProject extends
 		AbstractMultiBranchProject<MavenModuleSet, MavenModuleSetBuild> {
 
 	private static final String UNUSED = "unused";
@@ -72,7 +71,7 @@ public class MavenMultiBranchProject extends
 	}
 
 	@Override
-	public TopLevelItemDescriptor getDescriptor() {
+	public AbstractFolderDescriptor getDescriptor() {
 		return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(
 				MavenMultiBranchProject.class);
 	}
@@ -96,8 +95,7 @@ public class MavenMultiBranchProject extends
 	 * Our project's descriptor.
 	 */
 	@Extension
-	public static class DescriptorImpl extends
-			AbstractProject.AbstractProjectDescriptor {
+	public static class DescriptorImpl extends AbstractFolderDescriptor {
 		/**
 		 * {@inheritDoc}
 		 */

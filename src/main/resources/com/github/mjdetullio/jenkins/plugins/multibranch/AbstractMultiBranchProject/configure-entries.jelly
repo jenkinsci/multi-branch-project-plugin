@@ -28,64 +28,12 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form"
-		xmlns:p="/lib/hudson/project">
-
-	<f:entry title="${%Display Name}" field="displayNameOrNull">
-		<f:textbox
-				checkUrl="'${rootURL}/checkDisplayName?displayName='+encodeURIComponent(this.value)+'&amp;jobName='+encodeURIComponent('${h.jsStringEscape(it.name)}')" />
-	</f:entry>
-	<f:entry title="${%Default view}" field="defaultView">
-		<select class="setting-input" name="primaryView">
-			<j:forEach var="v" items="${it.views}">
-				<f:option selected="${it.primaryView==v}">
-					${v.viewName}
-				</f:option>
-			</j:forEach>
-		</select>
-	</f:entry>
-
-	<p:config-disableBuild />
-
-	<f:section title="${%Source Code Management}">
-		<f:entry title="${%Sync Branches Schedule}" field="syncBranchesCron"
-				help="/descriptor/hudson.triggers.TimerTrigger/help/spec">
-			<f:textbox default="${it.syncBranchesCron}"
-					checkUrl="'descriptorByName/hudson.triggers.TimerTrigger/checkSpec?value=' + encodeURIComponent(this.value)" />
-		</f:entry>
-
-		<f:optionalBlock field="allowAnonymousSync"
-				title="${%Allow anonymous trigger of branch sync}"
-				checked="${it.allowAnonymousSync}" />
-
-		<f:optionalBlock field="suppressTriggerNewBranchBuild"
-				title="${%Suppress trigger build after discovering new branches}"
-				checked="${it.suppressTriggerNewBranchBuild}" />
-
-		<j:set var="scms" value="${it.getSCMSourceDescriptors(true)}" />
-		<j:if test="${empty(scms)}">
-			<f:block>
-				<div class="warning">${%No compatible SCMs found. Try installing an SCM plugin that implements jenkins.scm.api.SCMSource.}</div>
-			</f:block>
-		</j:if>
-		<j:forEach var="idx" begin="0" end="${size(scms)-1}">
-			<j:set var="descriptor" value="${scms[idx]}" />
-			<f:radioBlock name="scmSource" value="${idx}"
-					title="${descriptor.displayName}"
-					checked="${it.getSCMSource().descriptor==descriptor}">
-				<j:set var="instance"
-						value="${it.getSCMSource().descriptor==descriptor ? it.getSCMSource() : null}" />
-				<st:include from="${descriptor}"
-						page="${descriptor.configPage}" />
-			</f:radioBlock>
-		</j:forEach>
-	</f:section>
-
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
 	<f:withCustomDescriptorByName value="${it.absoluteUrl}template">
 		<st:include it="${it.template}" from="${it}"
-				page="configure-branch-common.jelly" />
+				page="configure-branch-common" />
 
 		<st:include it="${it.template}" from="${it}"
-				page="configure-branch-entries.jelly" />
+				page="configure-branch-entries" />
 	</f:withCustomDescriptorByName>
 </j:jelly>

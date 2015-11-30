@@ -23,23 +23,22 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
+import com.cloudbees.hudson.plugins.folder.AbstractFolderDescriptor;
 import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
-import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.TopLevelItem;
-import hudson.model.TopLevelItemDescriptor;
 import jenkins.model.Jenkins;
 
 /**
  * @author Matthew DeTullio
  */
 @SuppressWarnings("unused")
-public class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
+public final class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
 		<FreeStyleProject, FreeStyleBuild> {
 
 	private static final String UNUSED = "unused";
@@ -65,7 +64,7 @@ public class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
 	 * {@inheritDoc}
 	 */
 	@Override
-	public TopLevelItemDescriptor getDescriptor() {
+	public AbstractFolderDescriptor getDescriptor() {
 		return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(
 				FreeStyleMultiBranchProject.class);
 	}
@@ -81,8 +80,7 @@ public class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
 	 * Our project's descriptor.
 	 */
 	@Extension
-	public static class DescriptorImpl extends
-			AbstractProject.AbstractProjectDescriptor {
+	public static class DescriptorImpl extends AbstractFolderDescriptor {
 		/**
 		 * {@inheritDoc}
 		 */

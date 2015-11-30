@@ -35,7 +35,9 @@ import hudson.model.ViewGroup;
 
 /**
  * Wrapper for {@link ListView} that provides additional support for listing
- * branches in multi-branch projects.
+ * branches in multi-branch projects.  The most important component is the
+ * addition of {@link #getBranch(String)}.  Without it, non-primary views would
+ * not have a Stapler URL binding, resulting in broken links to branches.
  *
  * @author Matthew DeTullio
  */
@@ -48,8 +50,8 @@ public class BranchListView extends ListView {
 	 *
 	 * @param name - Name of view
 	 */
-	@DataBoundConstructor
 	@SuppressWarnings(UNUSED)
+	@DataBoundConstructor
 	public BranchListView(String name) {
 		super(name);
 	}
@@ -121,8 +123,8 @@ public class BranchListView extends ListView {
 	/**
 	 * Gives this class an alias for configuration XML.
 	 */
-	@Initializer(before = InitMilestone.PLUGINS_STARTED)
 	@SuppressWarnings(UNUSED)
+	@Initializer(before = InitMilestone.PLUGINS_STARTED)
 	public static void registerXStream() {
 		Items.XSTREAM.alias("branch-list-view", BranchListView.class);
 	}
