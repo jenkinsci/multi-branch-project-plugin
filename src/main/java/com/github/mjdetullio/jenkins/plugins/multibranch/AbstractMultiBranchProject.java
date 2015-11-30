@@ -24,7 +24,6 @@
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
 import antlr.ANTLRException;
-import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -101,7 +100,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -177,7 +175,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			throws IOException {
 		super.onLoad(parent, name);
 		runTriggerMigration();
-		runBranchProjectMigration();
+		// TODO runBranchProjectEncodedNameMigration();
 		init();
 	}
 
@@ -197,119 +195,6 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			} catch (IOException e) {
 				LOGGER.log(Level.WARNING, "Unable to migrate trigger for " +
 						name, e);
-			}
-		}
-	}
-
-	private synchronized void runBranchProjectMigration() {
-		if (disabledSubProjects == null) {
-			disabledSubProjects = new PersistedList<String>(this);
-		}
-
-		List<File> subProjects = new ArrayList<File>();
-		subProjects.add(getTemplateDir());
-
-		File[] files = getBranchesDir().listFiles();
-		if (files != null) {
-			subProjects.addAll(Arrays.asList(files));
-		}
-
-		for (File subProjectDir : subProjects) {
-			File configFile = new File(subProjectDir, "config.xml");
-
-			if (!subProjectDir.isDirectory() || !configFile.exists()
-					|| !configFile.isFile()) {
-				continue;
-			}
-
-			try {
-				String xml = FileUtils.readFileToString(configFile);
-
-				xml = xml.replaceFirst(
-						"(?m)^<(freestyle-branch-project|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.FreeStyleBranchProject)( plugin=\".*?\")?>$",
-						"<project>");
-				xml = xml.replaceFirst(
-						"(?m)^</(freestyle-branch-project|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.FreeStyleBranchProject)>$",
-						"</project>");
-				xml = xml.replaceFirst(
-						"(?m)^  <template>(true|false)</template>(\r?\n)", "");
-
-				/*
-				 * Previously, sub-projects would reference the parent to see if
-				 * they were disabled.  Now the parent must track each
-				 * sub-project to see if it should stay disabled when the parent
-				 * is re-enabled.
-				 *
-				 * If disabled, this needs to be propagated down to the
-				 * sub-projects.
-				 */
-				if (isDisabled()) {
-					if (!subProjectDir.equals(getTemplateDir()) && xml.matches(
-							"(?ms).+(\r?\n)  <disabled>true</disabled>(\r?\n).+")) {
-						disabledSubProjects.add(
-								rawDecode(subProjectDir.getName()));
-					}
-
-					xml = xml.replaceFirst(
-							"(?m)^  <disabled>false</disabled>$",
-							"  <disabled>true</disabled>");
-				}
-
-				FileUtils.writeStringToFile(configFile, xml);
-			} catch (IOException e) {
-				LOGGER.log(Level.WARNING, "Unable to migrate " + configFile, e);
-			}
-
-			String branchFullName =
-					getFullName() + '/' + subProjectDir.getName();
-
-			// Replacement mirrors jenkins.model.Jenkins#expandVariablesForDirectory
-			String buildsPath = Util.replaceMacro(
-					Jenkins.getActiveInstance().getRawBuildsDir(),
-					ImmutableMap.of(
-							"JENKINS_HOME",
-							Jenkins.getActiveInstance().getRootDir().getPath(),
-							"ITEM_ROOTDIR", subProjectDir.getPath(),
-							"ITEM_FULLNAME", branchFullName,
-							"ITEM_FULL_NAME", branchFullName.replace(':', '$')
-					));
-
-			if (buildsPath == null) {
-				continue;
-			}
-
-			File[] builds = new File(buildsPath).listFiles();
-
-			if (builds == null) {
-				continue;
-			}
-
-			for (File buildDir : builds) {
-				File buildFile = new File(buildDir, "build.xml");
-
-				if (!buildDir.isDirectory() || !buildFile.exists()
-						|| !buildFile.isFile()) {
-					continue;
-				}
-
-				try {
-					String xml = FileUtils.readFileToString(buildFile);
-
-					xml = xml.replaceFirst(
-							"(?m)^<(freestyle-branch-build|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.FreeStyleBranchBuild)( plugin=\".*?\")?>$",
-							"<build>");
-					xml = xml.replaceFirst(
-							"(?m)^</(freestyle-branch-build|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.FreeStyleBranchBuild)>$",
-							"</build>");
-					xml = xml.replaceAll(
-							" class=\"(freestyle-branch-build|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.FreeStyleBranchBuild)\"",
-							" class=\"build\"");
-
-					FileUtils.writeStringToFile(buildFile, xml);
-				} catch (IOException e) {
-					LOGGER.log(Level.WARNING, "Unable to migrate " + buildFile,
-							e);
-				}
 			}
 		}
 	}
