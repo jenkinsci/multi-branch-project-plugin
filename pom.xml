@@ -14,7 +14,7 @@
 
 	<name>Multi-Branch Project Plugin</name>
 	<description>
-		This plugin adds an additional project type that creates sub-projects
+		This plugin adds additional project types that create sub-projects
 		for each branch using a shared configuration.
 	</description>
 	<url>https://wiki.jenkins-ci.org/display/JENKINS/Multi-Branch+Project+Plugin</url>

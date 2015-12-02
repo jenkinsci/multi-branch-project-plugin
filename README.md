@@ -1,6 +1,6 @@
 # Jenkins Multi-Branch Project Plugin
 
-This plugin adds an additional project type that creates sub-projects for each
+This plugin adds additional project types that create sub-projects for each
 branch using a shared configuration.
 
 ## Usage
@@ -13,7 +13,7 @@ version.
 Jenkins interface on the "advanced" tab in the plugin update center to get
 the newest/unreleased code.
 
-The project type will appear in the list on the "New Job" page.  When
+The project types will appear in the list on the "New Job" page.  When
 configuring the project, the SCM portion will be different.  This section tells
 the project how to find branches to create sub-projects for.  Just about
 everything else should look like a normal free-style project and will be
