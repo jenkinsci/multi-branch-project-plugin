@@ -43,6 +43,10 @@ were great reference for creating this plugin's implementation.  The SCM API
 is also what allows this plugin to use different SCM types for obtaining the
 branch list.
 
+Thanks to Jesse Glick for stablizing a good chunk of boilerplate code from the
+Branch API Plugin and then abstracting it into the
+[Folders Plugin](https://github.com/jenkinsci/cloudbees-folder-plugin).
+
 ### Why not use the Branch API Plugin?
 
 This project was first started from scratch.  After discovering the Branch API,
@@ -56,13 +60,20 @@ issues with API that caused the switch back to an independent plugin:
   template project, whose XML is applied directly to the branch projects, making
   it possible to use all the same wrappers, builders, and publishers (including
   configuration from community plugins).
-* The API is still experimental (it has its fair share of _TODOs_ in the
-  source).  This plugin aims to be suitable for a production environment as soon
-  as possible, without dependencies on the progress of the API's development.
+* The API was still experimental at the time.  Since then, it had a 1.0 release
+  and the parts that were abstracted to the Folders Plugin are now used by this
+  plugin.
 * This plugin favors simplicity in configuration over the complexity seen in the
   API.  Admittedly, the API offers a lot of flexibility and nice-to-haves when
   it comes to configuring the project's SCM, but it seems like overkill.
 
-If the Literate Plugin and the Branch API Plugin become stable, and the API can
-be modified to support the functionality described in the first point, there is
-a likelihood that this plugin will adopt the API.
+Now that the Branch API Plugin is stable, there is a likelihood that this
+plugin will be deprecated or adopt the API.  Here's what's holding that up:
+
+* Writing the migration path will be a huge PITA or impossible.
+* A separate
+  [Freestyle Multibranch Plugin](https://github.com/jenkinsci/freestyle-multibranch-plugin)
+  was started, but there isn't yet feature parity with this plugin (in both
+  directions).
+* There is not an equivalent for Maven Projects that uses the API yet.  The
+  implementation should ideally belong to the Maven Plugin.
