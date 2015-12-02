@@ -67,7 +67,7 @@ public final class BallColorFolderIcon extends FolderIcon {
 	/**
 	 * Delegates the image to the {@link #owner}'s
 	 * {@link hudson.model.BallColor}.
-	 * <p/>
+	 * <br>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -82,7 +82,7 @@ public final class BallColorFolderIcon extends FolderIcon {
 	/**
 	 * Delegates the description to the {@link #owner}'s
 	 * {@link hudson.model.BallColor}.
-	 * <p/>
+	 * <br>
 	 * {@inheritDoc}
 	 */
 	@Override

@@ -62,7 +62,9 @@ public final class TemplateStaplerRequestWrapper extends RequestImpl {
 	/**
 	 * Overrides certain parameter names with certain values needed when setting
 	 * the configuration for template projects.  Otherwise, relies on the
-	 * standard implementation. <p/> Inherited docs: <p/> {@inheritDoc}
+	 * standard implementation.
+	 * <br>
+	 * {@inheritDoc}
 	 */
 	@Override
 	public String getParameter(String name) {
@@ -104,7 +106,7 @@ public final class TemplateStaplerRequestWrapper extends RequestImpl {
 
 	/**
 	 * Overrides the form with a sanitized version.
-	 * <p/>
+	 * <br>
 	 * {@inheritDoc}
 	 */
 	@Override

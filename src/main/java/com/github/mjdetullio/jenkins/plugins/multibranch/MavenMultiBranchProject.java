@@ -84,9 +84,7 @@ public final class MavenMultiBranchProject extends
 	 * @return validation of file
 	 */
 	@SuppressWarnings(UNUSED)
-	public FormValidation doCheckFileInWorkspace(@QueryParameter String value)
-			throws IOException,
-			ServletException {
+	public FormValidation doCheckFileInWorkspace(@QueryParameter String value) {
 		// Probably not great
 		return FormValidation.ok();
 	}

@@ -182,7 +182,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Overrides view initialization to use BranchListView instead of AllView.
-	 * <p/>
+	 * <br>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -263,6 +263,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Retrieves the template sub-project.  Used by configure-entries.jelly.
+	 *
+	 * @return P - the template sub-project.
 	 */
 	@SuppressWarnings(UNUSED)
 	public P getTemplate() {
@@ -379,6 +381,9 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Gets whether anonymous sync is allowed from <code>${JOB_URL}/syncBranches</code>
+	 *
+	 * @return boolean - true: no permission checked for URL,
+	 *         false: permission checked
 	 */
 	@SuppressWarnings(UNUSED)
 	public boolean isAllowAnonymousSync() {
@@ -399,6 +404,9 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Gets whether build on new branch is suppressed.
+	 *
+	 * @return boolean - true: no build triggered when sub-project created,
+	 *         false: build is triggered when sub-project created
 	 */
 	@SuppressWarnings(UNUSED)
 	public boolean isSuppressTriggerNewBranchBuild() {
@@ -439,7 +447,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * If copied, also copy the {@link #templateProject}.
-	 * <p/>
+	 * <br>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -467,7 +475,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * Sets various implementation-specific fields and forwards wrapped
 	 * req/rsp objects on to the {@link #templateProject}'s
 	 * {@link AbstractProject#doConfigSubmit(StaplerRequest, StaplerResponse)}.
-	 * <p/>
+	 * <br>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -578,7 +586,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * {@link ChildObserver} to determine whether to update an existing project
 	 * or create a new project for the branch.  Current projects get updated
 	 * with the {@link #templateProject}'s config.
-	 * <p/>
+	 * <br>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -671,7 +679,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Used as the color of the status ball for the project.
-	 * <p/>
+	 * <br>
 	 * Kanged from Branch API.
 	 *
 	 * @return the color of the status ball for the project.
@@ -703,8 +711,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Returns the last build.
+	 *
+	 * @return B - the build or null
 	 */
 	@SuppressWarnings(UNUSED)
+	@CheckForNull
 	@Exported
 	public B getLastBuild() {
 		B retVal = null;
@@ -716,8 +727,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Returns the oldest build in the record.
+	 *
+	 * @return B - the build or null
 	 */
 	@SuppressWarnings(UNUSED)
+	@CheckForNull
 	@Exported
 	public B getFirstBuild() {
 		B retVal = null;
@@ -740,8 +754,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * Result#UNSTABLE}.
 	 *
 	 * @see #getLastStableBuild()
+	 * @return B - the build or null
 	 */
 	@SuppressWarnings(UNUSED)
+	@CheckForNull
 	@Exported
 	public B getLastSuccessfulBuild() {
 		B retVal = null;
@@ -756,8 +772,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * null.
 	 *
 	 * @see #getLastSuccessfulBuild
+	 * @return B - the build or null
 	 */
 	@SuppressWarnings(UNUSED)
+	@CheckForNull
 	@Exported
 	public B getLastUnsuccessfulBuild() {
 		B retVal = null;
@@ -771,8 +789,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * Returns the last unstable build, if any. Otherwise null.
 	 *
 	 * @see #getLastSuccessfulBuild
+	 * @return B - the build or null
 	 */
 	@SuppressWarnings(UNUSED)
+	@CheckForNull
 	@Exported
 	public B getLastUnstableBuild() {
 		B retVal = null;
@@ -786,8 +806,10 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * Returns the last stable build, if any. Otherwise null.
 	 *
 	 * @see #getLastSuccessfulBuild
+	 * @return B - the build or null
 	 */
 	@SuppressWarnings(UNUSED)
+	@CheckForNull
 	@Exported
 	public B getLastStableBuild() {
 		B retVal = null;
@@ -799,8 +821,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Returns the last failed build, if any. Otherwise null.
+	 *
+	 * @return B - the build or null
 	 */
 	@SuppressWarnings(UNUSED)
+	@CheckForNull
 	@Exported
 	public B getLastFailedBuild() {
 		B retVal = null;
@@ -812,8 +837,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Returns the last completed build, if any. Otherwise null.
+	 *
+	 * @return B - the build or null
 	 */
 	@SuppressWarnings(UNUSED)
+	@CheckForNull
 	@Exported
 	public B getLastCompletedBuild() {
 		B retVal = null;
@@ -823,6 +851,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		return retVal;
 	}
 
+	@CheckForNull
 	private B takeLast(B b1, B b2) {
 		if (b2 != null && (b1 == null
 				|| b2.getTimestamp().after(b1.getTimestamp()))) {
@@ -841,6 +870,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Gets whether this project is disabled.
+	 *
+	 * @return boolean - true: disabled, false: enabled
 	 */
 	public boolean isDisabled() {
 		return disabled;
@@ -850,6 +881,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 	 * Marks the build as disabled.
 	 *
 	 * @param b true - disable, false - enable
+	 * @throws IOException - if problem saving
 	 */
 	public void makeDisabled(boolean b) throws IOException {
 		if (disabled == b) {
@@ -997,7 +1029,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 	/**
 	 * Inverse function of {@link hudson.Util#rawEncode(String)}.
-	 * <p/>
+	 * <br>
 	 * Kanged from Branch API.
 	 *
 	 * @param s the encoded string.

@@ -70,6 +70,9 @@ public class BranchListView extends ListView {
 	/**
 	 * Alias for {@link #getItem(String)}. This is the one used in the URL
 	 * binding.
+	 *
+	 * @param name - Name of branch
+	 * @return {@link #getItem(String)}
 	 */
 	@SuppressWarnings(UNUSED)
 	public final TopLevelItem getBranch(String name) {
