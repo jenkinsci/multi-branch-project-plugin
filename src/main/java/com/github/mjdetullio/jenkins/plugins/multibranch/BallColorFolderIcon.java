@@ -36,75 +36,73 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Matthew DeTullio
  */
 public final class BallColorFolderIcon extends FolderIcon {
-	private static final String UNUSED = "unused";
+    private static final String UNUSED = "unused";
 
-	private AbstractMultiBranchProject<?, ?> owner;
+    private AbstractMultiBranchProject<?, ?> owner;
 
-	/**
-	 * No-op constructor used only for data binding.
-	 */
-	@SuppressWarnings(UNUSED)
-	@DataBoundConstructor
-	public BallColorFolderIcon() {
-		// No-op
-	}
+    /**
+     * No-op constructor used only for data binding.
+     */
+    @SuppressWarnings(UNUSED)
+    @DataBoundConstructor
+    public BallColorFolderIcon() {
+        // No-op
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void setOwner(AbstractFolder<?> owner) {
-		if (!(owner instanceof AbstractMultiBranchProject<?, ?>)) {
-			throw new UnsupportedOperationException(
-					BallColorFolderIcon.class.getSimpleName() +
-							" is only supported for " +
-							AbstractMultiBranchProject.class.getSimpleName());
-		}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setOwner(AbstractFolder<?> owner) {
+        if (!(owner instanceof AbstractMultiBranchProject<?, ?>)) {
+            throw new UnsupportedOperationException(String.format("%s is only supported for %s",
+                    BallColorFolderIcon.class.getSimpleName(), AbstractMultiBranchProject.class.getSimpleName()));
+        }
 
-		this.owner = (AbstractMultiBranchProject<?, ?>) owner;
-	}
+        this.owner = (AbstractMultiBranchProject<?, ?>) owner;
+    }
 
-	/**
-	 * Delegates the image to the {@link #owner}'s
-	 * {@link hudson.model.BallColor}.
-	 * <br>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getImageOf(String size) {
-		if (owner == null) {
-			return BallColor.GREY.getImageOf(size);
-		}
+    /**
+     * Delegates the image to the {@link #owner}'s {@link hudson.model.BallColor}.
+     * <br>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getImageOf(String size) {
+        if (owner == null) {
+            return BallColor.GREY.getImageOf(size);
+        }
 
-		return owner.getBallColor().getImageOf(size);
-	}
+        return owner.getBallColor().getImageOf(size);
+    }
 
-	/**
-	 * Delegates the description to the {@link #owner}'s
-	 * {@link hudson.model.BallColor}.
-	 * <br>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getDescription() {
-		if (owner == null) {
-			return BallColor.GREY.getDescription();
-		}
+    /**
+     * Delegates the description to the {@link #owner}'s {@link hudson.model.BallColor}.
+     * <br>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        if (owner == null) {
+            return BallColor.GREY.getDescription();
+        }
 
-		return owner.getBallColor().getDescription();
-	}
+        return owner.getBallColor().getDescription();
+    }
 
-	/**
-	 * Registers a descriptor to appear in the "Icon" dropdown on the
-	 * configuration page.
-	 */
-	@SuppressWarnings(UNUSED)
-	@Extension
-	public static class DescriptorImpl extends FolderIconDescriptor {
-		@Override
-		public String getDisplayName() {
-			// Need isApplicable() for this descriptor type...
-			return "Ball Color Icon";
-		}
-	}
+    /**
+     * Registers a descriptor to appear in the "Icon" dropdown on the configuration page.
+     */
+    @SuppressWarnings(UNUSED)
+    @Extension
+    public static class DescriptorImpl extends FolderIconDescriptor {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDisplayName() {
+            // Need isApplicable() for this descriptor type...
+            return "Ball Color Icon";
+        }
+    }
 }

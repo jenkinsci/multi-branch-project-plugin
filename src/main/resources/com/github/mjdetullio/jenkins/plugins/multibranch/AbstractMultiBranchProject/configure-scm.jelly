@@ -29,34 +29,39 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
-	<f:section title="${%Source Code Management}">
-		<j:set var="scms" value="${it.getSCMSourceDescriptors(true)}" />
-		<j:if test="${empty(scms)}">
-			<f:block>
-				<div class="warning">${%No compatible SCMs found. Try installing an SCM plugin that implements jenkins.scm.api.SCMSource.}</div>
-			</f:block>
-		</j:if>
-		<j:forEach var="idx" begin="0" end="${size(scms)-1}">
-			<j:set var="descriptor" value="${scms[idx]}" />
-			<f:radioBlock name="scmSource" value="${idx}"
-					title="${descriptor.displayName}"
-					checked="${it.getSCMSource().descriptor == descriptor}">
-				<j:set var="instance"
-						value="${it.getSCMSource().descriptor == descriptor ? it.getSCMSource() : null}" />
-				<st:include from="${descriptor}"
-						page="${descriptor.configPage}" />
+    <f:section title="${%Source Code Management}">
+        <j:set var="scms" value="${it.getSCMSourceDescriptors(true)}"/>
+        <j:if test="${empty(scms)}">
+            <f:block>
+                <div class="warning">
+                    ${%No compatible SCMs found. Try installing an SCM plugin that implements jenkins.scm.api.SCMSource.}
+                </div>
+            </f:block>
+        </j:if>
+        <j:forEach var="idx" begin="0" end="${size(scms)-1}">
+            <j:set var="descriptor" value="${scms[idx]}"/>
+            <f:radioBlock name="scmSource" value="${idx}"
+                          title="${descriptor.displayName}"
+                          checked="${it.getSCMSource().descriptor == descriptor}">
+                <j:set var="instance" value="${it.getSCMSource().descriptor == descriptor ? it.getSCMSource() : null}"/>
+                <st:include from="${descriptor}" page="${descriptor.configPage}"/>
 
-				<f:block>
-					<p>Looking for more options?</p>
-					<p>
-						The Multi-Branch Project Plugin uses the SCM API Plugin to determine multi-branch compatible SCMs.
-						The SCM API Plugin then delegates the available options to the SCM you selected using the <code>jenkins.scm.api.SCMSource</code> interface.
-						This interface is different from "normal" projects, so the options may be different and/or lacking by comparison.
-						This means that the individual SCM plugins (Git, Subversion, Hg, etc.) must implement any additional configuration options.
-					</p>
-					<p>Please ask the plugin maintainers to add more options, or contribute back by creating pull requests for those plugins.</p>
-				</f:block>
-			</f:radioBlock>
-		</j:forEach>
-	</f:section>
+                <f:block>
+                    <p>Looking for more options?</p>
+                    <p>
+                        The Multi-Branch Project Plugin uses the SCM API Plugin to determine multi-branch compatible
+                        SCMs. The SCM API Plugin then delegates the available options to the SCM you selected using the
+                        <code>jenkins.scm.api.SCMSource</code>
+                        interface. This interface is different from "normal" projects, so the options may be different
+                        and/or lacking by comparison. This means that the individual SCM plugins (Git, Subversion, Hg,
+                        etc.) must implement any additional configuration options.
+                    </p>
+                    <p>
+                        Please ask the plugin maintainers to add more options, or contribute back by creating pull
+                        requests for those plugins.
+                    </p>
+                </f:block>
+            </f:radioBlock>
+        </j:forEach>
+    </f:section>
 </j:jelly>

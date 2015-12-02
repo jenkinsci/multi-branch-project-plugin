@@ -25,35 +25,35 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:p="/lib/hudson/project">
-    <p:config-disableBuild />
+    <p:config-disableBuild/>
 
     <f:block>
-        <hr />
+        <hr/>
         <h3>${%Branch Management}</h3>
         <p>Describes how sub-projects are created based on available SCM branches.</p>
-        <hr />
+        <hr/>
     </f:block>
 
     <f:optionalBlock field="allowAnonymousSync"
                      title="${%Allow anonymous trigger of branch sync} -- DEPRECATED: Will be removed with v0.5"
-                     checked="${it.allowAnonymousSync}" />
+                     checked="${it.allowAnonymousSync}"/>
 
     <f:optionalBlock field="suppressTriggerNewBranchBuild"
                      title="${%Suppress automatic build trigger after discovering new branches}"
-                     checked="${it.suppressTriggerNewBranchBuild}" />
+                     checked="${it.suppressTriggerNewBranchBuild}"/>
 
-    <st:include page="configure-scm" />
+    <st:include page="configure-scm"/>
 
     <!-- sync branches triggers config pane -->
     <j:invokeStatic var="triggers" className="hudson.triggers.Trigger" method="for_">
-        <j:arg value="${it}" type="hudson.model.Item" />
+        <j:arg value="${it}" type="hudson.model.Item"/>
     </j:invokeStatic>
     <f:descriptorList title="${%Sync Branches Triggers}"
                       descriptors="${triggers}"
                       instances="${it.triggers}"
                       field="syncBranchesTriggers">
         <!-- pseudo-trigger to configure URL to trigger builds remotely. -->
-        <st:include page="/hudson/model/BuildAuthorizationToken/config.jelly" />
+        <st:include page="/hudson/model/BuildAuthorizationToken/config.jelly"/>
     </f:descriptorList>
 
     <f:section title="${%Dead Branches Strategy}">
@@ -78,18 +78,18 @@ THE SOFTWARE.
     </f:section>
 
     <f:block>
-        <hr />
+        <hr/>
         <h3>${%Per Branch Configuration}</h3>
         <p>Configuration in this section will be applied to each sub-project.</p>
-        <hr />
+        <hr/>
     </f:block>
 
     <st:include page="configure-entries" optional="true"/>
 
     <f:block>
-        <hr />
+        <hr/>
         <h3>${%Additional Parent Project Configuration}</h3>
         <p>These settings are common to the Folders Plugin, which is used to list the generated sub-projects.</p>
-        <hr />
+        <hr/>
     </f:block>
 </j:jelly>

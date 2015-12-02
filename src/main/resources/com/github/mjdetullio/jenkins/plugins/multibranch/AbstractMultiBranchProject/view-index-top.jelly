@@ -24,11 +24,7 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
-    <st:include it="${it}"
-                class="com.cloudbees.hudson.plugins.folder.AbstractFolder"
-                page="view-index-top" />
+    <st:include it="${it}" class="com.cloudbees.hudson.plugins.folder.AbstractFolder" page="view-index-top"/>
 
-    <st:include it="${it}"
-                class="hudson.model.AbstractProject"
-                page="makeDisabled" />
+    <st:include it="${it}" class="hudson.model.AbstractProject" page="makeDisabled"/>
 </j:jelly>

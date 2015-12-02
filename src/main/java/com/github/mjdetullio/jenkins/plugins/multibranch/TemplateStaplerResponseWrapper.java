@@ -33,30 +33,28 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 
 /**
- * Prevents the template project from committing a redirect when it finishes
- * handling the request in {@link hudson.model.AbstractProject#doConfigSubmit(StaplerRequest, StaplerResponse)}.
+ * Prevents the template project from committing a redirect when it finishes handling the request in
+ * {@link hudson.model.AbstractProject#doConfigSubmit(StaplerRequest, StaplerResponse)}.
  *
  * @author Matthew DeTullio
  */
 public final class TemplateStaplerResponseWrapper extends ResponseImpl {
-	/*package*/ TemplateStaplerResponseWrapper(Stapler stapler,
-			StaplerResponse response) throws ServletException {
-		super(stapler, response);
-	}
+    /*package*/ TemplateStaplerResponseWrapper(Stapler stapler, StaplerResponse response) throws ServletException {
+        super(stapler, response);
+    }
 
-	@Override
-	public void sendRedirect(@Nonnull String url) throws IOException {
-		// No-op
-	}
+    @Override
+    public void sendRedirect(@Nonnull String url) throws IOException {
+        // No-op
+    }
 
-	@Override
-	public void sendRedirect(int var1, @Nonnull String var2)
-			throws IOException {
-		// No-op
-	}
+    @Override
+    public void sendRedirect(int var1, @Nonnull String var2) throws IOException {
+        // No-op
+    }
 
-	@Override
-	public void sendRedirect2(@Nonnull String var1) throws IOException {
-		// No-op
-	}
+    @Override
+    public void sendRedirect2(@Nonnull String var1) throws IOException {
+        // No-op
+    }
 }

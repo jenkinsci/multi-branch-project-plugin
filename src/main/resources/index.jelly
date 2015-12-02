@@ -1,4 +1,3 @@
 <div>
-	This plugin adds an additional project type that creates sub-projects for
-	each branch using a shared configuration.
+    This plugin adds additional project types that create sub-projects for each branch using a shared configuration.
 </div>

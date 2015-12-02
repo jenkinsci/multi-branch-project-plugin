@@ -38,73 +38,69 @@ import jenkins.model.Jenkins;
  * @author Matthew DeTullio
  */
 @SuppressWarnings("unused")
-public final class FreeStyleMultiBranchProject extends AbstractMultiBranchProject
-		<FreeStyleProject, FreeStyleBuild> {
+public final class FreeStyleMultiBranchProject extends AbstractMultiBranchProject<FreeStyleProject, FreeStyleBuild> {
 
-	private static final String UNUSED = "unused";
+    private static final String UNUSED = "unused";
 
-	/**
-	 * Constructor that specifies the {@link ItemGroup} for this project and the
-	 * project name.
-	 *
-	 * @param parent - the project's parent {@link ItemGroup}
-	 * @param name   - the project's name
-	 */
-	public FreeStyleMultiBranchProject(ItemGroup parent, String name) {
-		super(parent, name);
-	}
+    /**
+     * Constructor that specifies the {@link ItemGroup} for this project and the
+     * project name.
+     *
+     * @param parent the project's parent {@link ItemGroup}
+     * @param name   the project's name
+     */
+    public FreeStyleMultiBranchProject(ItemGroup parent, String name) {
+        super(parent, name);
+    }
 
-	@Override
-	protected FreeStyleProject createNewSubProject(
-			AbstractMultiBranchProject parent, String branchName) {
-		return new FreeStyleProject(parent, branchName);
-	}
+    @Override
+    protected FreeStyleProject createNewSubProject(AbstractMultiBranchProject parent, String branchName) {
+        return new FreeStyleProject(parent, branchName);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public AbstractFolderDescriptor getDescriptor() {
-		return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(
-				FreeStyleMultiBranchProject.class);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AbstractFolderDescriptor getDescriptor() {
+        return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(FreeStyleMultiBranchProject.class);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	protected Class<FreeStyleBuild> getBuildClass() {
-		return FreeStyleBuild.class;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    protected Class<FreeStyleBuild> getBuildClass() {
+        return FreeStyleBuild.class;
+    }
 
-	/**
-	 * Our project's descriptor.
-	 */
-	@Extension
-	public static class DescriptorImpl extends AbstractFolderDescriptor {
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public String getDisplayName() {
-			return Messages.FreeStyleMultiBranchProject_DisplayName();
-		}
+    /**
+     * Our project's descriptor.
+     */
+    @Extension
+    public static class DescriptorImpl extends AbstractFolderDescriptor {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDisplayName() {
+            return Messages.FreeStyleMultiBranchProject_DisplayName();
+        }
 
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public TopLevelItem newInstance(ItemGroup parent, String name) {
-			return new FreeStyleMultiBranchProject(parent, name);
-		}
-	}
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public TopLevelItem newInstance(ItemGroup parent, String name) {
+            return new FreeStyleMultiBranchProject(parent, name);
+        }
+    }
 
-	/**
-	 * Gives this class an alias for configuration XML.
-	 */
-	@Initializer(before = InitMilestone.PLUGINS_STARTED)
-	@SuppressWarnings(UNUSED)
-	public static void registerXStream() {
-		Items.XSTREAM.alias("freestyle-multi-branch-project",
-				FreeStyleMultiBranchProject.class);
-	}
+    /**
+     * Gives this class an alias for configuration XML.
+     */
+    @Initializer(before = InitMilestone.PLUGINS_STARTED)
+    @SuppressWarnings(UNUSED)
+    public static void registerXStream() {
+        Items.XSTREAM.alias("freestyle-multi-branch-project", FreeStyleMultiBranchProject.class);
+    }
 }

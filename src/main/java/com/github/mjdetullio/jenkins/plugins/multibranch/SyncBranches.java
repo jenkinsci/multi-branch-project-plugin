@@ -16,35 +16,34 @@ import javax.annotation.Nonnull;
  * @author Matthew DeTullio
  */
 public final class SyncBranches<P extends AbstractProject<P, B> & TopLevelItem, B extends AbstractBuild<P, B>>
-		extends FolderComputation<P> {
-	public SyncBranches(AbstractMultiBranchProject<P, B> folder,
-			SyncBranches<P, B> previous) {
-		super(folder, previous);
-	}
+        extends FolderComputation<P> {
+    public SyncBranches(AbstractMultiBranchProject<P, B> folder, SyncBranches<P, B> previous) {
+        super(folder, previous);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	@Nonnull
-	public AbstractMultiBranchProject<P, B> getParent() {
-		return (AbstractMultiBranchProject<P, B>) super.getParent();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Nonnull
+    public AbstractMultiBranchProject<P, B> getParent() {
+        return (AbstractMultiBranchProject<P, B>) super.getParent();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getDisplayName() {
-		return "Sync Branches";
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDisplayName() {
+        return "Sync Branches";
+    }
 
-	/**
-	 * Gives this class an alias for configuration XML.
-	 */
-	@SuppressWarnings("unused")
-	@Initializer(before = InitMilestone.PLUGINS_STARTED)
-	public static void registerXStream() {
-		Items.XSTREAM.alias("sync-branches", SyncBranches.class);
-	}
+    /**
+     * Gives this class an alias for configuration XML.
+     */
+    @SuppressWarnings("unused")
+    @Initializer(before = InitMilestone.PLUGINS_STARTED)
+    public static void registerXStream() {
+        Items.XSTREAM.alias("sync-branches", SyncBranches.class);
+    }
 }

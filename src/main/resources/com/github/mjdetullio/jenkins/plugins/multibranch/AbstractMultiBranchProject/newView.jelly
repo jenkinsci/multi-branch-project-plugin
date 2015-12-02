@@ -29,15 +29,14 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
-	<l:layout norefresh="true" permission="${it.CONFIGURE}"
-			title="${%New View}">
-		<st:include page="sidepanel.jelly" />
+    <l:layout norefresh="true" permission="${it.CONFIGURE}" title="${%New View}">
+        <st:include page="sidepanel.jelly"/>
 
-		<l:main-panel>
-			<j:set var="views" value="${it.getViewDescriptors()}" />
-			<n:form nameTitle="${%View name}" action="createView"
-					descriptors="${views}" checkUrl="viewExistsCheck"
-					xmlns:n="/lib/hudson/newFromList" />
-		</l:main-panel>
-	</l:layout>
+        <l:main-panel>
+            <j:set var="views" value="${it.getViewDescriptors()}"/>
+            <n:form nameTitle="${%View name}" action="createView"
+                    descriptors="${views}" checkUrl="viewExistsCheck"
+                    xmlns:n="/lib/hudson/newFromList"/>
+        </l:main-panel>
+    </l:layout>
 </j:jelly>
