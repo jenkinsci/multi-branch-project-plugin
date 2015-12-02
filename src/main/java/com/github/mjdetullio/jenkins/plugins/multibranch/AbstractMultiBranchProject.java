@@ -416,8 +416,6 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		save();
 	}
 
-	// TODO support clone by also cloning the template project
-
 	/**
 	 * Exposes a URI that allows the trigger of a branch sync.
 	 *
@@ -436,6 +434,32 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 			checkPermission(CONFIGURE);
 		}
 		scheduleBuild();
+	}
+
+	/**
+	 * If copied, also copy the {@link #templateProject}.
+	 * <p/>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onCopiedFrom(Item src) {
+		super.onCopiedFrom(src);
+
+		//noinspection unchecked
+		AbstractMultiBranchProject<P, B> projectSrc =
+				(AbstractMultiBranchProject<P, B>) src;
+
+		/*
+		 * onLoad should have been invoked already, so there should be an
+		 * empty templateProject.  Just update by XML and that's it.
+		 */
+		try {
+			templateProject.updateByXml((Source) new StreamSource(
+							projectSrc.getTemplate().getConfigFile().readRaw()));
+		} catch (IOException e) {
+			LOGGER.log(Level.WARNING, "Failed to copy templateProject from " +
+					src.getName() +	" into " + getName(), e);
+		}
 	}
 
 	/**
