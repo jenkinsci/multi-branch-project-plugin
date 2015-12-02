@@ -36,6 +36,7 @@ import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BallColor;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
@@ -666,6 +667,38 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
 		// notify the queue as the projects might be now tied to different node
 		Jenkins.getActiveInstance().getQueue().scheduleMaintenance();
+	}
+
+	/**
+	 * Used as the color of the status ball for the project.
+	 * <p/>
+	 * Kanged from Branch API.
+	 *
+	 * @return the color of the status ball for the project.
+	 */
+	@Nonnull
+	public BallColor getBallColor() {
+		if (isDisabled()) {
+			return BallColor.DISABLED;
+		}
+
+		BallColor c = BallColor.DISABLED;
+		boolean animated = false;
+
+		for (P item : getItems()) {
+			BallColor d = item.getIconColor();
+			animated |= d.isAnimated();
+			d = d.noAnime();
+			if (d.compareTo(c) < 0) {
+				c = d;
+			}
+		}
+
+		if (animated) {
+			c = c.anime();
+		}
+
+		return c;
 	}
 
 	/**
