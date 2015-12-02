@@ -426,7 +426,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 		}
 
 		// All others are branches
-		return new File(getBranchesDir(), Util.rawEncode(child.getName()));
+		return new File(getBranchesDir(), child.getName());
 	}
 
 	/**
