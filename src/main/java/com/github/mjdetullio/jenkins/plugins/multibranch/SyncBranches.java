@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
  */
 public final class SyncBranches<P extends AbstractProject<P, B> & TopLevelItem, B extends AbstractBuild<P, B>>
         extends FolderComputation<P> {
-    public SyncBranches(AbstractMultiBranchProject<P, B> folder, SyncBranches<P, B> previous) {
+    public SyncBranches(TemplateDrivenMultiBranchProject<P, B> folder, SyncBranches<P, B> previous) {
         super(folder, previous);
     }
 
@@ -26,8 +26,8 @@ public final class SyncBranches<P extends AbstractProject<P, B> & TopLevelItem, 
      */
     @Override
     @Nonnull
-    public AbstractMultiBranchProject<P, B> getParent() {
-        return (AbstractMultiBranchProject<P, B>) super.getParent();
+    public TemplateDrivenMultiBranchProject<P, B> getParent() {
+        return (TemplateDrivenMultiBranchProject<P, B>) super.getParent();
     }
 
     /**

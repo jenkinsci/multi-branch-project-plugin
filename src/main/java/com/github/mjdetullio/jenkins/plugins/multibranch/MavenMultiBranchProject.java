@@ -40,7 +40,8 @@ import org.kohsuke.stapler.QueryParameter;
  * @author Matthew DeTullio
  */
 @SuppressWarnings("unused")
-public final class MavenMultiBranchProject extends AbstractMultiBranchProject<MavenModuleSet, MavenModuleSetBuild> {
+public final class MavenMultiBranchProject
+        extends TemplateDrivenMultiBranchProject<MavenModuleSet, MavenModuleSetBuild> {
 
     private static final String UNUSED = "unused";
 
@@ -55,7 +56,7 @@ public final class MavenMultiBranchProject extends AbstractMultiBranchProject<Ma
     }
 
     @Override
-    protected MavenModuleSet createNewSubProject(AbstractMultiBranchProject parent, String branchName) {
+    protected MavenModuleSet createNewSubProject(TemplateDrivenMultiBranchProject parent, String branchName) {
         return new MavenModuleSet(parent, branchName);
     }
 

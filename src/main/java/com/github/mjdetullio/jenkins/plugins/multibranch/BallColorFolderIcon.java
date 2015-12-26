@@ -98,7 +98,8 @@ public final class BallColorFolderIcon extends FolderIcon {
      */
     @Nonnull
     private BallColor calculateBallColor() {
-        if (owner instanceof AbstractMultiBranchProject && ((AbstractMultiBranchProject) owner).isDisabled()) {
+        if (owner instanceof TemplateDrivenMultiBranchProject
+                && ((TemplateDrivenMultiBranchProject) owner).isDisabled()) {
             return BallColor.DISABLED;
         }
 

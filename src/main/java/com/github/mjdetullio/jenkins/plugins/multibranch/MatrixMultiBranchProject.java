@@ -38,7 +38,7 @@ import jenkins.model.Jenkins;
  * @author Alastair D'Silva
  */
 @SuppressWarnings("unused")
-public final class MatrixMultiBranchProject extends AbstractMultiBranchProject<MatrixProject, MatrixBuild> {
+public final class MatrixMultiBranchProject extends TemplateDrivenMultiBranchProject<MatrixProject, MatrixBuild> {
 
     private static final String UNUSED = "unused";
 
@@ -54,7 +54,7 @@ public final class MatrixMultiBranchProject extends AbstractMultiBranchProject<M
     }
 
     @Override
-    protected MatrixProject createNewSubProject(AbstractMultiBranchProject parent, String branchName) {
+    protected MatrixProject createNewSubProject(TemplateDrivenMultiBranchProject parent, String branchName) {
         return new MatrixProject(parent, branchName);
     }
 

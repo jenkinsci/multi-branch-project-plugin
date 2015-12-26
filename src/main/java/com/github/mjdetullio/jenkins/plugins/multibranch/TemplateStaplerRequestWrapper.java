@@ -34,7 +34,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 
 /**
- * Prevents configuration of {@link AbstractMultiBranchProject}s from bleeding into their template projects
+ * Prevents configuration of {@link TemplateDrivenMultiBranchProject}s from bleeding into their template projects
  * when the request is passed to the template's
  * {@link hudson.model.AbstractProject#doConfigSubmit(StaplerRequest, StaplerResponse)} method.
  *

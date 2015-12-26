@@ -38,7 +38,8 @@ import jenkins.model.Jenkins;
  * @author Matthew DeTullio
  */
 @SuppressWarnings("unused")
-public final class FreeStyleMultiBranchProject extends AbstractMultiBranchProject<FreeStyleProject, FreeStyleBuild> {
+public final class FreeStyleMultiBranchProject
+        extends TemplateDrivenMultiBranchProject<FreeStyleProject, FreeStyleBuild> {
 
     private static final String UNUSED = "unused";
 
@@ -54,7 +55,7 @@ public final class FreeStyleMultiBranchProject extends AbstractMultiBranchProjec
     }
 
     @Override
-    protected FreeStyleProject createNewSubProject(AbstractMultiBranchProject parent, String branchName) {
+    protected FreeStyleProject createNewSubProject(TemplateDrivenMultiBranchProject parent, String branchName) {
         return new FreeStyleProject(parent, branchName);
     }
 

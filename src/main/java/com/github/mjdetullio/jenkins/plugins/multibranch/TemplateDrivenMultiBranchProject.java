@@ -96,11 +96,11 @@ import java.util.logging.Logger;
 /**
  * @author Matthew DeTullio
  */
-public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B> & TopLevelItem, B extends AbstractBuild<P, B>>
+public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject<P, B> & TopLevelItem, B extends AbstractBuild<P, B>>
         extends ComputedFolder<P>
         implements TopLevelItem, SCMSourceOwner {
 
-    private static final String CLASSNAME = AbstractMultiBranchProject.class.getName();
+    private static final String CLASSNAME = TemplateDrivenMultiBranchProject.class.getName();
     private static final Logger LOGGER = Logger.getLogger(CLASSNAME);
 
     private static final String UNUSED = "unused";
@@ -121,7 +121,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * {@inheritDoc}
      */
-    public AbstractMultiBranchProject(ItemGroup<? extends Item> parent, String name) {
+    public TemplateDrivenMultiBranchProject(ItemGroup parent, String name) {
         super(parent, name);
         init2();
     }
@@ -139,7 +139,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
     /**
      * Common initialization that is invoked when either a new project is created with the constructor
-     * {@link AbstractMultiBranchProject#AbstractMultiBranchProject(ItemGroup, String)} or when a project
+     * {@link TemplateDrivenMultiBranchProject#TemplateDrivenMultiBranchProject(ItemGroup, String)} or when a project
      * is loaded from disk with {@link #onLoad(ItemGroup, String)}.
      */
     protected void init2() {
@@ -239,7 +239,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * @param branchName branch name
      * @return new sub-project of type {@link P}
      */
-    protected abstract P createNewSubProject(AbstractMultiBranchProject parent, String branchName);
+    protected abstract P createNewSubProject(TemplateDrivenMultiBranchProject parent, String branchName);
 
     /**
      * Stapler URL binding for ${rootUrl}/job/${project}/branch/${branchProject}
@@ -442,8 +442,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
         super.onCopiedFrom(src);
 
         //noinspection unchecked
-        AbstractMultiBranchProject<P, B> projectSrc =
-                (AbstractMultiBranchProject<P, B>) src;
+        TemplateDrivenMultiBranchProject<P, B> projectSrc = (TemplateDrivenMultiBranchProject<P, B>) src;
 
         /*
          * onLoad should have been invoked already, so there should be an
@@ -950,7 +949,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      */
     public static List<SCMSourceDescriptor> getSCMSourceDescriptors(boolean onlyUserInstantiable) {
         List<SCMSourceDescriptor> descriptors =
-                SCMSourceDescriptor.forOwner(AbstractMultiBranchProject.class, onlyUserInstantiable);
+                SCMSourceDescriptor.forOwner(TemplateDrivenMultiBranchProject.class, onlyUserInstantiable);
 
         /*
          * No point in having SingleSCMSource as an option, so axe it.
@@ -1018,8 +1017,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * @param item the item that was just updated
      */
     public static void enforceProjectStateOnUpdated(Item item) {
-        if (item.getParent() instanceof AbstractMultiBranchProject) {
-            AbstractMultiBranchProject parent = (AbstractMultiBranchProject) item.getParent();
+        if (item.getParent() instanceof TemplateDrivenMultiBranchProject) {
+            TemplateDrivenMultiBranchProject parent = (TemplateDrivenMultiBranchProject) item.getParent();
             AbstractProject template = parent.getTemplate();
 
             if (item.equals(template)) {
