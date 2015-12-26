@@ -39,6 +39,7 @@ import javax.annotation.Nonnull;
  *
  * @author Matthew DeTullio
  */
+@SuppressWarnings("unused")
 public final class BallColorFolderIcon extends FolderIcon {
     private static final String UNUSED = "unused";
 

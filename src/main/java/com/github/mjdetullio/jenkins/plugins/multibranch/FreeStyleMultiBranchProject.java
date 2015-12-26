@@ -23,7 +23,6 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
-import com.cloudbees.hudson.plugins.folder.AbstractFolderDescriptor;
 import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
@@ -32,20 +31,20 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.TopLevelItem;
+import jenkins.branch.BranchProjectFactory;
+import jenkins.branch.MultiBranchProjectDescriptor;
 import jenkins.model.Jenkins;
+
+import javax.annotation.Nonnull;
 
 /**
  * @author Matthew DeTullio
  */
-@SuppressWarnings("unused")
 public final class FreeStyleMultiBranchProject
         extends TemplateDrivenMultiBranchProject<FreeStyleProject, FreeStyleBuild> {
 
-    private static final String UNUSED = "unused";
-
     /**
-     * Constructor that specifies the {@link ItemGroup} for this project and the
-     * project name.
+     * Constructor that specifies the {@link ItemGroup} for this project and the project name.
      *
      * @param parent the project's parent {@link ItemGroup}
      * @param name   the project's name
@@ -54,31 +53,37 @@ public final class FreeStyleMultiBranchProject
         super(parent, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected FreeStyleProject createNewSubProject(TemplateDrivenMultiBranchProject parent, String branchName) {
-        return new FreeStyleProject(parent, branchName);
+    protected FreeStyleProject newTemplate() {
+        return new FreeStyleProject(this, TemplateDrivenMultiBranchProject.TEMPLATE);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Nonnull
     @Override
-    public AbstractFolderDescriptor getDescriptor() {
+    protected BranchProjectFactory<FreeStyleProject, FreeStyleBuild> newProjectFactory() {
+        return new FreeStyleBranchProjectFactory();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    public MultiBranchProjectDescriptor getDescriptor() {
         return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(FreeStyleMultiBranchProject.class);
     }
 
     /**
-     * {@inheritDoc}
-     */
-    protected Class<FreeStyleBuild> getBuildClass() {
-        return FreeStyleBuild.class;
-    }
-
-    /**
-     * Our project's descriptor.
+     * {@link FreeStyleMultiBranchProject}'s descriptor.
      */
     @Extension
-    public static class DescriptorImpl extends AbstractFolderDescriptor {
+    public static class DescriptorImpl extends MultiBranchProjectDescriptor {
         /**
          * {@inheritDoc}
          */
@@ -100,7 +105,7 @@ public final class FreeStyleMultiBranchProject
      * Gives this class an alias for configuration XML.
      */
     @Initializer(before = InitMilestone.PLUGINS_STARTED)
-    @SuppressWarnings(UNUSED)
+    @SuppressWarnings("unused")
     public static void registerXStream() {
         Items.XSTREAM.alias("freestyle-multi-branch-project", FreeStyleMultiBranchProject.class);
     }

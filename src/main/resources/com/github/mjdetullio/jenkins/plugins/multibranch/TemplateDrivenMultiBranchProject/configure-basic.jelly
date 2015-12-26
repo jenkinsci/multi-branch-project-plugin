@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 The MIT License
 
-Copyright (c) 2010, CloudBees, Inc.
+Copyright 2015 CloudBees, Inc., Matthew DeTullio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +24,6 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
-    <!--
-      For historical reasons, jobs used "newJobDetail.jelly".
-
-      "it" is a descriptor when this file is called.
-    -->
-    <st:include page="newJobDetail.jelly" class="${it.clazz}" optional="true"/>
+<j:jelly xmlns:j="jelly:core" xmlns:p="/lib/hudson/project">
+    <p:config-disableBuild/>
 </j:jelly>

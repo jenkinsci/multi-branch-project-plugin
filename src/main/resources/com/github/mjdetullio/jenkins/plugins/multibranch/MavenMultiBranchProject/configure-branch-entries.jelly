@@ -31,15 +31,6 @@ THE SOFTWARE.
     <j:set var="descriptor" value="${it.descriptor}"/>
     <j:set var="instance" value="${it}"/>
 
-    <p:config-trigger>
-        <!-- setting to ignore upstream changes is done as a pseudo-trigger -->
-        <f:optionalBlock name="maven.triggerByDependency"
-                         help="/plugin/maven-plugin/ignore-upstrem-changes.html"
-                         title="${%Build whenever a SNAPSHOT dependency is built}"
-                         checked="${h.defaultToTrue(!it.ignoreUpstremChanges())}"/>
-        <p:config-upstream-pseudo-trigger/>
-    </p:config-trigger>
-
     <p:config-buildWrappers/>
 
     <f:section title="${%Pre Steps}">

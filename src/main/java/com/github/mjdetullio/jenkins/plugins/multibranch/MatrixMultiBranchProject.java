@@ -23,7 +23,6 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
-import com.cloudbees.hudson.plugins.folder.AbstractFolderDescriptor;
 import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
@@ -32,12 +31,15 @@ import hudson.matrix.MatrixProject;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.TopLevelItem;
+import jenkins.branch.BranchProjectFactory;
+import jenkins.branch.MultiBranchProjectDescriptor;
 import jenkins.model.Jenkins;
+
+import javax.annotation.Nonnull;
 
 /**
  * @author Alastair D'Silva
  */
-@SuppressWarnings("unused")
 public final class MatrixMultiBranchProject extends TemplateDrivenMultiBranchProject<MatrixProject, MatrixBuild> {
 
     private static final String UNUSED = "unused";
@@ -53,16 +55,29 @@ public final class MatrixMultiBranchProject extends TemplateDrivenMultiBranchPro
         super(parent, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected MatrixProject createNewSubProject(TemplateDrivenMultiBranchProject parent, String branchName) {
-        return new MatrixProject(parent, branchName);
+    protected MatrixProject newTemplate() {
+        return new MatrixProject(this, TemplateDrivenMultiBranchProject.TEMPLATE);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Nonnull
     @Override
-    public AbstractFolderDescriptor getDescriptor() {
+    protected BranchProjectFactory<MatrixProject, MatrixBuild> newProjectFactory() {
+        return new MatrixBranchProjectFactory();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    public MultiBranchProjectDescriptor getDescriptor() {
         return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(MatrixMultiBranchProject.class);
     }
 
@@ -74,10 +89,10 @@ public final class MatrixMultiBranchProject extends TemplateDrivenMultiBranchPro
     }
 
     /**
-     * Our project's descriptor.
+     * {@link MatrixMultiBranchProject}'s descriptor.
      */
     @Extension(optional = true)
-    public static class DescriptorImpl extends AbstractFolderDescriptor {
+    public static class DescriptorImpl extends MultiBranchProjectDescriptor {
         /**
          * {@inheritDoc}
          */

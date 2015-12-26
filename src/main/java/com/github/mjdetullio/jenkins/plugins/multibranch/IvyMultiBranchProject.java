@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
 import hudson.Extension;
@@ -34,22 +33,20 @@ import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.TopLevelItem;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
+import jenkins.branch.BranchProjectFactory;
+import jenkins.branch.MultiBranchProjectDescriptor;
 import jenkins.model.Jenkins;
-
 import org.kohsuke.stapler.QueryParameter;
 
-import com.cloudbees.hudson.plugins.folder.AbstractFolderDescriptor;
+import javax.annotation.Nonnull;
+
 
 /**
  * @author Florian Bühlmann
  */
-@SuppressWarnings("unchecked")
 public final class IvyMultiBranchProject extends TemplateDrivenMultiBranchProject<IvyModuleSet, IvyModuleSetBuild> {
+
+    private static final String UNUSED = "unused";
 
     /**
      * Constructor that specifies the {@link hudson.model.ItemGroup} for this
@@ -62,54 +59,70 @@ public final class IvyMultiBranchProject extends TemplateDrivenMultiBranchProjec
         super(parent, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected IvyModuleSet createNewSubProject(
-            TemplateDrivenMultiBranchProject parent, String branchName) {
-        return new IvyModuleSet(parent, branchName);
+    protected IvyModuleSet newTemplate() {
+        return new IvyModuleSet(this, TemplateDrivenMultiBranchProject.TEMPLATE);
     }
 
-    protected Class<IvyModuleSetBuild> getBuildClass() {
-        return IvyModuleSetBuild.class;
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    protected BranchProjectFactory<IvyModuleSet, IvyModuleSetBuild> newProjectFactory() {
+        return new IvyBranchProjectFactory();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
     @Override
-    public AbstractFolderDescriptor getDescriptor() {
-        return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(
-                IvyMultiBranchProject.class);
+    public MultiBranchProjectDescriptor getDescriptor() {
+        return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(IvyMultiBranchProject.class);
     }
 
     /**
      * Stapler URL binding used by the configure page to check the location of
-     * the POM, alternate settings file, etc - any file.
+     * any file.
      *
      * @param value file to check
      * @return validation of file
      */
+    @SuppressWarnings(UNUSED)
     public FormValidation doCheckFileInWorkspace(@QueryParameter String value) {
         // Probably not great
         return FormValidation.ok();
     }
 
-    public FormValidation doCheckIvySettingsFile(@QueryParameter String value)
-            throws IOException, ServletException {
+    /**
+     * Stapler URL binding used by the configure page to check the location of
+     * alternate settings file.
+     *
+     * @param value file to check
+     * @return validation of file
+     */
+    @SuppressWarnings(UNUSED)
+    public FormValidation doCheckIvySettingsFile(@QueryParameter String value) {
         String v = Util.fixEmpty(value);
         if ((v == null) || (v.length() == 0)) {
             // Null values are allowed.
             return FormValidation.ok();
         }
-        if ((v.startsWith("/")) || (v.startsWith("\\"))
-                || (v.matches("^\\w\\:\\\\.*"))) {
-            return FormValidation
-                    .error("Ivy settings file must be a relative path.");
+        if (v.startsWith("/") || v.startsWith("\\") || v.matches("^\\w\\:\\\\.*")) {
+            return FormValidation.error("Ivy settings file must be a relative path.");
         }
         return FormValidation.ok();
     }
 
     /**
-     * Our project's descriptor.
+     * {@link IvyMultiBranchProject}'s descriptor.
      */
     @Extension(optional = true)
-    public static class DescriptorImpl extends AbstractFolderDescriptor {
+    public static class DescriptorImpl extends MultiBranchProjectDescriptor {
         /**
          * {@inheritDoc}
          */
@@ -130,9 +143,9 @@ public final class IvyMultiBranchProject extends TemplateDrivenMultiBranchProjec
     /**
      * Gives this class an alias for configuration XML.
      */
+    @SuppressWarnings(UNUSED)
     @Initializer(before = InitMilestone.PLUGINS_STARTED)
     public static void registerXStream() {
-        Items.XSTREAM.alias("ivy-multi-branch-project",
-                IvyMultiBranchProject.class);
+        Items.XSTREAM.alias("ivy-multi-branch-project", IvyMultiBranchProject.class);
     }
 }

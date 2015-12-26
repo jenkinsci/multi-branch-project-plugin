@@ -39,20 +39,47 @@ import java.io.IOException;
  * @author Matthew DeTullio
  */
 public final class TemplateStaplerResponseWrapper extends ResponseImpl {
+    /**
+     * Constructs this extension of {@link ResponseImpl} using the provided {@link Stapler} instance and the
+     * {@link StaplerResponse} you want to wrap.
+     *
+     * @param stapler the Stapler instance, which you can get from {@link StaplerRequest#getStapler()}
+     * @param response the response you want to wrap
+     * @throws ServletException
+     */
     /*package*/ TemplateStaplerResponseWrapper(Stapler stapler, StaplerResponse response) throws ServletException {
         super(stapler, response);
     }
 
+    /**
+     * No-op.
+     *
+     * @param url ignored
+     * @throws IOException impossible
+     */
     @Override
     public void sendRedirect(@Nonnull String url) throws IOException {
         // No-op
     }
 
+    /**
+     * No-op.
+     *
+     * @param var1 ignored
+     * @param var2 ignored
+     * @throws IOException impossible
+     */
     @Override
     public void sendRedirect(int var1, @Nonnull String var2) throws IOException {
         // No-op
     }
 
+    /**
+     * No-op.
+     *
+     * @param var1 ignored
+     * @throws IOException impossible
+     */
     @Override
     public void sendRedirect2(@Nonnull String var1) throws IOException {
         // No-op

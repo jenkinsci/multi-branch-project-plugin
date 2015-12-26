@@ -41,6 +41,13 @@ import javax.servlet.ServletException;
  * @author Matthew DeTullio
  */
 public final class TemplateStaplerRequestWrapper extends RequestImpl {
+    /**
+     * Constructs this extension of {@link RequestImpl} under the assumption that {@link RequestImpl} is also the
+     * underlying type of the {@link StaplerRequest}.
+     *
+     * @param request the request submitted the {@link TemplateDrivenMultiBranchProject}
+     * @throws ServletException if errors
+     */
     /*package*/ TemplateStaplerRequestWrapper(StaplerRequest request) throws ServletException {
         /*
          * Ugly casts to RequestImpl... but should be ok since it will throw
@@ -48,12 +55,6 @@ public final class TemplateStaplerRequestWrapper extends RequestImpl {
          */
         super(request.getStapler(), request, ((RequestImpl) request).ancestors,
                 ((RequestImpl) request).tokens);
-
-        // Remove some fields that we don't want to send to the template
-        JSONObject json = getSubmittedForm();
-        json.remove("name");
-        json.remove("description");
-        json.remove("displayNameOrNull");
     }
 
     /**
@@ -105,23 +106,6 @@ public final class TemplateStaplerRequestWrapper extends RequestImpl {
      */
     @Override
     public JSONObject getSubmittedForm() throws ServletException {
-        JSONObject json = super.getSubmittedForm();
-
-        // Don't set the name
-        json.remove("name");
-
-        // Don't set the display name
-        json.remove("displayNameOrNull");
-
-        // Don't set the description
-        json.remove("description");
-
-        // Don't change the disabled state
-        json.remove("disable");
-
-        // Don't send conflicting triggers
-        json.remove("syncBranchesTriggers");
-
-        return json;
+        return super.getSubmittedForm().getJSONObject("projectFactory");
     }
 }

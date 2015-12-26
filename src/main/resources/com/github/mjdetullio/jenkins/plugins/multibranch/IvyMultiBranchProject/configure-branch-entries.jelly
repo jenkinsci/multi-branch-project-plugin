@@ -31,10 +31,6 @@ THE SOFTWARE.
     <j:set var="descriptor" value="${it.descriptor}"/>
     <j:set var="instance" value="${it}"/>
 
-    <p:config-trigger>
-        <p:config-upstream-pseudo-trigger />
-    </p:config-trigger>
-
     <f:section title="${%Ivy Module Configuration}">
         <f:entry title="${%Ivy xml files}" field="ivyFilePattern">
             <f:textbox />

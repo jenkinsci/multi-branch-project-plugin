@@ -32,17 +32,6 @@ THE SOFTWARE.
     <j:set var="instance" value="${it}"/>
 
     <f:section title="${%Project Options and Properties}">
-        <j:if test="${it.supportsLogRotator()}">
-            <!-- log rotator -->
-            <f:optionalBlock name="logrotate"
-                             help="/help/project-config/log-rotation.html"
-                             title="${%Discard Old Builds}"
-                             checked="${it.buildDiscarder!=null}" inline="true">
-                <f:dropdownDescriptorSelector field="buildDiscarder"
-                                              title="${%Strategy}"/>
-            </f:optionalBlock>
-        </j:if>
-
         <!-- job property configurations. This should have been <f:descriptorList> -->
         <f:descriptorList field="properties"
                           descriptors="${h.getJobPropertyDescriptors(it.getClass())}"

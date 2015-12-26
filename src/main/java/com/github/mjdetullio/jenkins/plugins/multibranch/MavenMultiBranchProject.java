@@ -23,7 +23,6 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
-import com.cloudbees.hudson.plugins.folder.AbstractFolderDescriptor;
 import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
@@ -33,13 +32,16 @@ import hudson.model.ItemGroup;
 import hudson.model.Items;
 import hudson.model.TopLevelItem;
 import hudson.util.FormValidation;
+import jenkins.branch.BranchProjectFactory;
+import jenkins.branch.MultiBranchProjectDescriptor;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.QueryParameter;
+
+import javax.annotation.Nonnull;
 
 /**
  * @author Matthew DeTullio
  */
-@SuppressWarnings("unused")
 public final class MavenMultiBranchProject
         extends TemplateDrivenMultiBranchProject<MavenModuleSet, MavenModuleSetBuild> {
 
@@ -55,24 +57,35 @@ public final class MavenMultiBranchProject
         super(parent, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected MavenModuleSet createNewSubProject(TemplateDrivenMultiBranchProject parent, String branchName) {
-        return new MavenModuleSet(parent, branchName);
+    protected MavenModuleSet newTemplate() {
+        return new MavenModuleSet(this, TemplateDrivenMultiBranchProject.TEMPLATE);
     }
 
-    @SuppressWarnings(UNUSED)
-    protected Class<MavenModuleSetBuild> getBuildClass() {
-        return MavenModuleSetBuild.class;
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    protected BranchProjectFactory<MavenModuleSet, MavenModuleSetBuild> newProjectFactory() {
+        return new MavenBranchProjectFactory();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
     @Override
-    public AbstractFolderDescriptor getDescriptor() {
+    public MultiBranchProjectDescriptor getDescriptor() {
         return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(MavenMultiBranchProject.class);
     }
 
     /**
-     * Stapler URL binding used by the configure page to check the location of the POM, alternate
-     * settings file, etc - any file.
+     * Stapler URL binding used by the configure page to check the location of the POM, alternate settings file, etc -
+     * any file.
      *
      * @param value file to check
      * @return validation of file
@@ -84,10 +97,10 @@ public final class MavenMultiBranchProject
     }
 
     /**
-     * Our project's descriptor.
+     * {@link MavenMultiBranchProject}'s descriptor.
      */
     @Extension(optional = true)
-    public static class DescriptorImpl extends AbstractFolderDescriptor {
+    public static class DescriptorImpl extends MultiBranchProjectDescriptor {
         /**
          * {@inheritDoc}
          */

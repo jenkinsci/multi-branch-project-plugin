@@ -1,8 +1,7 @@
 <!--
 The MIT License
 
-Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi,
-Eric Lefevre-Ardant, id:cactusman, Yahoo! Inc., Matthew DeTullio
+Copyright (c) 2016, Matthew DeTullio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,13 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 
-<!--
-  Config page
--->
-
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
-    <f:withCustomDescriptorByName value="${it.absoluteUrl}template">
+    <f:withCustomDescriptorByName value="${h.currentDescriptorByNameUrl}/template">
         <st:include it="${it.template}" from="${it}" page="configure-branch-common"/>
 
         <st:include it="${it.template}" from="${it}" page="configure-branch-entries"/>

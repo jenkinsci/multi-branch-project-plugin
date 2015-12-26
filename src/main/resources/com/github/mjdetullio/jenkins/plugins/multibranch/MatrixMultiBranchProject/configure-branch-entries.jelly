@@ -29,8 +29,6 @@ THE SOFTWARE.
     <j:set var="descriptor" value="${it.descriptor}"/>
     <j:set var="instance" value="${it}"/>
 
-    <p:config-trigger/>
-
     <f:section title="${%Configuration Matrix}">
         <!-- Needed for LabelAxis, but including these from LabelAxis/config.jelly is too late -->
         <l:yui module="treeview" />
@@ -42,9 +40,9 @@ THE SOFTWARE.
 
         <f:optionalBlock name="hasCombinationFilter" title="${%Combination Filter}" checked="${!empty(it.combinationFilter)}"
             help="/plugin/matrix-project/help/matrix/combinationfilter.html">
-	        <f:entry title="${%Filter}">
-	            <f:textbox name="combinationFilter" value="${it.combinationFilter}" />
-	        </f:entry>
+            <f:entry title="${%Filter}">
+                <f:textbox name="combinationFilter" value="${it.combinationFilter}" />
+            </f:entry>
         </f:optionalBlock>
 
         <j:choose>

@@ -47,33 +47,3 @@ Thanks to Jesse Glick for stablizing a good chunk of boilerplate code from the
 Branch API Plugin and then abstracting it into the
 [Folders Plugin](https://github.com/jenkinsci/cloudbees-folder-plugin).
 
-### Why not use the Branch API Plugin?
-
-This project was first started from scratch.  After discovering the Branch API,
-the implementation was changed to utilize the API.  However, there were some
-issues with API that caused the switch back to an independent plugin:
-
-* The vision for this plugin is one consolidated configuration for all branches
-  combined with support for the same build wrappers, builders, publishers, etc.
-  that you would see in the "stock" Jenkins project types.  There does not seem
-  to be a clear way to do this with the API.  This plugin uses an internal
-  template project, whose XML is applied directly to the branch projects, making
-  it possible to use all the same wrappers, builders, and publishers (including
-  configuration from community plugins).
-* The API was still experimental at the time.  Since then, it had a 1.0 release
-  and the parts that were abstracted to the Folders Plugin are now used by this
-  plugin.
-* This plugin favors simplicity in configuration over the complexity seen in the
-  API.  Admittedly, the API offers a lot of flexibility and nice-to-haves when
-  it comes to configuring the project's SCM, but it seems like overkill.
-
-Now that the Branch API Plugin is stable, there is a likelihood that this
-plugin will be deprecated or adopt the API.  Here's what's holding that up:
-
-* Writing the migration path will be a huge PITA or impossible.
-* A separate
-  [Freestyle Multibranch Plugin](https://github.com/jenkinsci/freestyle-multibranch-plugin)
-  was started, but there isn't yet feature parity with this plugin (in both
-  directions).
-* There is not an equivalent for Maven Projects that uses the API yet.  The
-  implementation should ideally belong to the Maven Plugin.
