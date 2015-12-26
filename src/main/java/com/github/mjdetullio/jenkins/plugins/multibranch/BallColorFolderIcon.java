@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2015 Matthew DeTullio
+ * Copyright 2015 Matthew DeTullio, Stephen Connolly
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,17 +28,21 @@ import com.cloudbees.hudson.plugins.folder.FolderIcon;
 import com.cloudbees.hudson.plugins.folder.FolderIconDescriptor;
 import hudson.Extension;
 import hudson.model.BallColor;
+import hudson.model.Job;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
+
 /**
- * {@link FolderIcon} that actually shows a {@link hudson.model.BallColor}.
+ * {@link FolderIcon} that actually shows a {@link BallColor} status icon, calculated from
+ * {@link AbstractFolder#getAllJobs()}.
  *
  * @author Matthew DeTullio
  */
 public final class BallColorFolderIcon extends FolderIcon {
     private static final String UNUSED = "unused";
 
-    private AbstractMultiBranchProject<?, ?> owner;
+    private AbstractFolder<?> owner;
 
     /**
      * No-op constructor used only for data binding.
@@ -53,17 +57,12 @@ public final class BallColorFolderIcon extends FolderIcon {
      * {@inheritDoc}
      */
     @Override
-    public void setOwner(AbstractFolder<?> owner) {
-        if (!(owner instanceof AbstractMultiBranchProject<?, ?>)) {
-            throw new UnsupportedOperationException(String.format("%s is only supported for %s",
-                    BallColorFolderIcon.class.getSimpleName(), AbstractMultiBranchProject.class.getSimpleName()));
-        }
-
-        this.owner = (AbstractMultiBranchProject<?, ?>) owner;
+    public void setOwner(AbstractFolder<?> folder) {
+        this.owner = folder;
     }
 
     /**
-     * Delegates the image to the {@link #owner}'s {@link hudson.model.BallColor}.
+     * Delegates the image to the {@link #owner}'s {@link BallColor}.
      * <br>
      * {@inheritDoc}
      */
@@ -73,11 +72,11 @@ public final class BallColorFolderIcon extends FolderIcon {
             return BallColor.GREY.getImageOf(size);
         }
 
-        return owner.getBallColor().getImageOf(size);
+        return calculateBallColor().getImageOf(size);
     }
 
     /**
-     * Delegates the description to the {@link #owner}'s {@link hudson.model.BallColor}.
+     * Delegates the description to the {@link #owner}'s {@link BallColor}.
      * <br>
      * {@inheritDoc}
      */
@@ -87,7 +86,39 @@ public final class BallColorFolderIcon extends FolderIcon {
             return BallColor.GREY.getDescription();
         }
 
-        return owner.getBallColor().getDescription();
+        return calculateBallColor().getDescription();
+    }
+
+    /**
+     * Calculates the color of the status ball for the owner based on its descendants.
+     * <br>
+     * Kanged from Branch API (original author Stephen Connolly).
+     *
+     * @return the color of the status ball for the owner.
+     */
+    @Nonnull
+    private BallColor calculateBallColor() {
+        if (owner instanceof AbstractMultiBranchProject && ((AbstractMultiBranchProject) owner).isDisabled()) {
+            return BallColor.DISABLED;
+        }
+
+        BallColor c = BallColor.DISABLED;
+        boolean animated = false;
+
+        for (Job job : owner.getAllJobs()) {
+            BallColor d = job.getIconColor();
+            animated |= d.isAnimated();
+            d = d.noAnime();
+            if (d.compareTo(c) < 0) {
+                c = d;
+            }
+        }
+
+        if (animated) {
+            c = c.anime();
+        }
+
+        return c;
     }
 
     /**
@@ -101,8 +132,7 @@ public final class BallColorFolderIcon extends FolderIcon {
          */
         @Override
         public String getDisplayName() {
-            // Need isApplicable() for this descriptor type...
-            return "Ball Color Icon";
+            return "Aggregate Ball Color Status Icon";
         }
     }
 }
