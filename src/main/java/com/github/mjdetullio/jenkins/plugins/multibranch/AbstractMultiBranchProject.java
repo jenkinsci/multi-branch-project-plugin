@@ -40,7 +40,9 @@ import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
+import hudson.model.Job;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
@@ -654,15 +656,15 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * Returns the last build.
      *
-     * @return B - the build or null
+     * @return the build or null
      */
     @SuppressWarnings(UNUSED)
     @CheckForNull
     @Exported
-    public B getLastBuild() {
-        B retVal = null;
-        for (P item : getItems()) {
-            retVal = takeLast(retVal, item.getLastBuild());
+    public Run getLastBuild() {
+        Run retVal = null;
+        for (Job job : getAllJobs()) {
+            retVal = takeLast(retVal, job.getLastBuild());
         }
         return retVal;
     }
@@ -670,19 +672,17 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * Returns the oldest build in the record.
      *
-     * @return B - the build or null
+     * @return the build or null
      */
     @SuppressWarnings(UNUSED)
     @CheckForNull
     @Exported
-    public B getFirstBuild() {
-        B retVal = null;
-
-        for (P item : getItems()) {
-            B b = item.getFirstBuild();
-
-            if (b != null && (retVal == null || b.getTimestamp().before(retVal.getTimestamp()))) {
-                retVal = b;
+    public Run getFirstBuild() {
+        Run retVal = null;
+        for (Job job : getAllJobs()) {
+            Run run = job.getFirstBuild();
+            if (run != null && (retVal == null || run.getTimestamp().before(retVal.getTimestamp()))) {
+                retVal = run;
             }
         }
 
@@ -693,16 +693,16 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * Returns the last successful build, if any. Otherwise null. A successful build would include
      * either {@link Result#SUCCESS} or {@link Result#UNSTABLE}.
      *
-     * @return B - the build or null
+     * @return the build or null
      * @see #getLastStableBuild()
      */
     @SuppressWarnings(UNUSED)
     @CheckForNull
     @Exported
-    public B getLastSuccessfulBuild() {
-        B retVal = null;
-        for (P item : getItems()) {
-            retVal = takeLast(retVal, item.getLastSuccessfulBuild());
+    public Run getLastSuccessfulBuild() {
+        Run retVal = null;
+        for (Job job : getAllJobs()) {
+            retVal = takeLast(retVal, job.getLastSuccessfulBuild());
         }
         return retVal;
     }
@@ -710,16 +710,16 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * Returns the last build that was anything but stable, if any. Otherwise null.
      *
-     * @return B - the build or null
+     * @return the build or null
      * @see #getLastSuccessfulBuild
      */
     @SuppressWarnings(UNUSED)
     @CheckForNull
     @Exported
-    public B getLastUnsuccessfulBuild() {
-        B retVal = null;
-        for (P item : getItems()) {
-            retVal = takeLast(retVal, item.getLastUnsuccessfulBuild());
+    public Run getLastUnsuccessfulBuild() {
+        Run retVal = null;
+        for (Job job : getAllJobs()) {
+            retVal = takeLast(retVal, job.getLastUnsuccessfulBuild());
         }
         return retVal;
     }
@@ -727,16 +727,16 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * Returns the last unstable build, if any. Otherwise null.
      *
-     * @return B - the build or null
+     * @return the build or null
      * @see #getLastSuccessfulBuild
      */
     @SuppressWarnings(UNUSED)
     @CheckForNull
     @Exported
-    public B getLastUnstableBuild() {
-        B retVal = null;
-        for (P item : getItems()) {
-            retVal = takeLast(retVal, item.getLastUnstableBuild());
+    public Run getLastUnstableBuild() {
+        Run retVal = null;
+        for (Job job : getAllJobs()) {
+            retVal = takeLast(retVal, job.getLastUnstableBuild());
         }
         return retVal;
     }
@@ -744,16 +744,16 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * Returns the last stable build, if any. Otherwise null.
      *
-     * @return B - the build or null
+     * @return the build or null
      * @see #getLastSuccessfulBuild
      */
     @SuppressWarnings(UNUSED)
     @CheckForNull
     @Exported
-    public B getLastStableBuild() {
-        B retVal = null;
-        for (P item : getItems()) {
-            retVal = takeLast(retVal, item.getLastStableBuild());
+    public Run getLastStableBuild() {
+        Run retVal = null;
+        for (Job job : getAllJobs()) {
+            retVal = takeLast(retVal, job.getLastStableBuild());
         }
         return retVal;
     }
@@ -761,15 +761,15 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * Returns the last failed build, if any. Otherwise null.
      *
-     * @return B - the build or null
+     * @return the build or null
      */
     @SuppressWarnings(UNUSED)
     @CheckForNull
     @Exported
-    public B getLastFailedBuild() {
-        B retVal = null;
-        for (P item : getItems()) {
-            retVal = takeLast(retVal, item.getLastFailedBuild());
+    public Run getLastFailedBuild() {
+        Run retVal = null;
+        for (Job job : getAllJobs()) {
+            retVal = takeLast(retVal, job.getLastFailedBuild());
         }
         return retVal;
     }
@@ -777,25 +777,25 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * Returns the last completed build, if any. Otherwise null.
      *
-     * @return B - the build or null
+     * @return the build or null
      */
     @SuppressWarnings(UNUSED)
     @CheckForNull
     @Exported
-    public B getLastCompletedBuild() {
-        B retVal = null;
-        for (P item : getItems()) {
-            retVal = takeLast(retVal, item.getLastCompletedBuild());
+    public Run getLastCompletedBuild() {
+        Run retVal = null;
+        for (Job job : getAllJobs()) {
+            retVal = takeLast(retVal, job.getLastCompletedBuild());
         }
         return retVal;
     }
 
     @CheckForNull
-    private B takeLast(B b1, B b2) {
-        if (b2 != null && (b1 == null || b2.getTimestamp().after(b1.getTimestamp()))) {
-            return b2;
+    private Run takeLast(Run run1, Run run2) {
+        if (run2 != null && (run1 == null || run2.getTimestamp().after(run1.getTimestamp()))) {
+            return run2;
         }
-        return b1;
+        return run1;
     }
 
     /**
