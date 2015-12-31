@@ -28,15 +28,15 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/mjdetullio/multi-branch-project-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:mjdetullio/multi-branch-project-plugin.git</developerConnection>
-        <url>https://github.com/mjdetullio/multi-branch-project-plugin</url>
+        <connection>scm:git:git://github.com/jenkinsci/multi-branch-project-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/multi-branch-project-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/multi-branch-project-plugin</url>
         <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
-        <system>GitHub</system>
-        <url>https://github.com/mjdetullio/multi-branch-project-plugin/issues</url>
+        <system>jira</system>
+        <url>https://issues.jenkins-ci.org/browse/JENKINS/component/21127</url>
     </issueManagement>
 
     <developers>
