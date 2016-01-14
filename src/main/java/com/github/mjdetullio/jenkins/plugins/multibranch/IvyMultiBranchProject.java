@@ -89,7 +89,7 @@ public final class IvyMultiBranchProject extends AbstractMultiBranchProject<IvyM
   /**
    * Our project's descriptor.
    */
-  @Extension
+  @Extension(optional = true)
   public static class DescriptorImpl extends AbstractFolderDescriptor {
     /**
      * {@inheritDoc}
