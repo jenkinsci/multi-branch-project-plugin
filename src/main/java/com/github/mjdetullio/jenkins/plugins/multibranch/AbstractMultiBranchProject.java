@@ -1108,7 +1108,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
             // Copy AMP from template if parent does not have a properties tag
             if (!xml.matches("(?ms).+(\r?\n)  <properties.+")
                     // Long line is long
-                    && xml.matches("(?ms).*<((freestyle|maven)-multi-branch-project|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.(FreeStyle|Maven)MultiBranchProject)( plugin=\".*?\")?.+")) {
+                    && xml.matches("(?ms).*<((freestyle|maven|matrix)-multi-branch-project|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.(FreeStyle|Maven|Matrix)MultiBranchProject)( plugin=\".*?\")?.+")) {
 
                 File templateConfigFile = new File(new File(configFile.getParentFile(), TEMPLATE), "config.xml");
 
