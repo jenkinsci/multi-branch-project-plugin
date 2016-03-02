@@ -27,6 +27,7 @@ import com.cloudbees.hudson.plugins.folder.computed.ChildObserver;
 import com.cloudbees.hudson.plugins.folder.computed.ComputedFolder;
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
 import com.cloudbees.hudson.plugins.folder.computed.OrphanedItemStrategy;
+import com.github.mjdetullio.jenkins.plugins.multibranch.migration.MigrationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
@@ -133,6 +134,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      */
     @Override
     public void onLoad(ItemGroup<? extends Item> parent, String name) throws IOException {
+        MigrationUtils.migrate01To02SubProjects(parent, name);
         super.onLoad(parent, name);
         init2();
         runSubProjectDisplayNameMigration();
@@ -1070,70 +1072,6 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
             if (o instanceof Item) {
                 enforceProjectStateOnUpdated((Item) o);
             }
-        }
-    }
-
-    /**
-     * Migrates <code>SyncBranchesTrigger</code> to {@link hudson.triggers.TimerTrigger} and copies the
-     * template's {@link hudson.security.AuthorizationMatrixProperty} to the parent as a
-     * {@link com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty}.
-     */
-    @SuppressWarnings(UNUSED)
-    @Initializer(before = InitMilestone.PLUGINS_STARTED)
-    public static void migrate() throws IOException {
-        final String projectAmpStartTag = "<hudson.security.AuthorizationMatrixProperty>";
-
-        final File projectsDir = new File(Jenkins.getActiveInstance().getRootDir(), "jobs");
-
-        if (!projectsDir.getCanonicalFile().isDirectory()) {
-            return;
-        }
-
-        Collection<File> configFiles =
-                FileUtils.listFiles(projectsDir, new NameFileFilter("config.xml"), TrueFileFilter.TRUE);
-
-        for (final File configFile : configFiles) {
-            String xml = FileUtils.readFileToString(configFile);
-
-            // Rename and wrap trigger open tag
-            xml = xml.replaceFirst(
-                    "(?m)^  <syncBranchesTrigger>(\r?\n)    <spec>",
-                    "  <triggers>\n    <hudson.triggers.TimerTrigger>\n      <spec>");
-
-            // Rename and wrap trigger close tag
-            xml = xml.replaceFirst(
-                    "(?m)^  </syncBranchesTrigger>",
-                    "    </hudson.triggers.TimerTrigger>\n  </triggers>");
-
-            // Copy AMP from template if parent does not have a properties tag
-            if (!xml.matches("(?ms).+(\r?\n)  <properties.+")
-                    // Long line is long
-                    && xml.matches("(?ms).*<((freestyle|maven)-multi-branch-project|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.(FreeStyle|Maven)MultiBranchProject)( plugin=\".*?\")?.+")) {
-
-                File templateConfigFile = new File(new File(configFile.getParentFile(), TEMPLATE), "config.xml");
-
-                if (templateConfigFile.isFile()) {
-                    String templateXml = FileUtils.readFileToString(templateConfigFile);
-
-                    int start = templateXml.indexOf(projectAmpStartTag);
-                    int end = templateXml.indexOf("</hudson.security.AuthorizationMatrixProperty>");
-
-                    if (start != -1 && end != -1) {
-                        String ampSettings = templateXml.substring(
-                                start + projectAmpStartTag.length(),
-                                end);
-
-                        xml = xml.replaceFirst("(?m)^  ",
-                                "  <properties>\n    " +
-                                        "<com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty>" +
-                                        ampSettings +
-                                        "</com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty>" +
-                                        "\n  </properties>\n  ");
-                    }
-                }
-            }
-
-            FileUtils.writeStringToFile(configFile, xml);
         }
     }
 }

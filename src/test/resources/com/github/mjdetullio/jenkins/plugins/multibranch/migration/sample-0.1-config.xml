@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<freestyle-multi-branch-project plugin="multi-branch-project-plugin@0.1.3">
+  <actions/>
+  <description>descas aasdf asd fasdf a fdfasdf</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>5</daysToKeep>
+        <numToKeep>5</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>asdf</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <sync-branches-trigger>
+      <spec>H/5 * * * *</spec>
+    </sync-branches-trigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders/>
+  <publishers/>
+  <buildWrappers/>
+  <allowAnonymousSync>false</allowAnonymousSync>
+  <scmSource class="jenkins.plugins.git.GitSCMSource" plugin="git@2.4.0">
+    <id>788103f6-b61e-48f4-82c5-572a1f6c9559</id>
+    <remote>https://github.com/mjdetullio/literate-project.git</remote>
+    <credentialsId></credentialsId>
+    <includes>*</includes>
+    <excludes></excludes>
+    <ignoreOnPushNotifications>false</ignoreOnPushNotifications>
+  </scmSource>
+  <views class="java.util.concurrent.CopyOnWriteArrayList">
+    <branch-list-view>
+      <owner class="freestyle-multi-branch-project" reference="../../.."/>
+      <name>All</name>
+      <filterExecutors>false</filterExecutors>
+      <filterQueue>false</filterQueue>
+      <properties class="hudson.model.View$PropertyList"/>
+      <jobNames>
+        <comparator class="hudson.util.CaseInsensitiveComparator"/>
+      </jobNames>
+      <jobFilters/>
+      <columns>
+        <hudson.views.StatusColumn/>
+        <hudson.views.WeatherColumn/>
+        <hudson.views.JobColumn/>
+        <hudson.views.LastSuccessColumn/>
+        <hudson.views.LastFailureColumn/>
+        <hudson.views.LastDurationColumn/>
+        <hudson.views.BuildButtonColumn/>
+      </columns>
+      <includeRegex>.*</includeRegex>
+      <recurse>false</recurse>
+    </branch-list-view>
+  </views>
+  <primaryView>All</primaryView>
+</freestyle-multi-branch-project>

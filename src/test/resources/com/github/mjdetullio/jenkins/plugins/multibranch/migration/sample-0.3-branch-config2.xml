@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.security.AuthorizationMatrixProperty>
+      <permission>hudson.model.Run.Delete:anonymous</permission>
+      <permission>hudson.model.Item.Workspace:anonymous</permission>
+      <permission>hudson.model.Item.Configure:anonymous</permission>
+      <permission>hudson.model.Item.Cancel:anonymous</permission>
+      <permission>hudson.model.Item.Delete:anonymous</permission>
+      <permission>hudson.model.Item.Read:anonymous</permission>
+      <permission>hudson.model.Item.Build:anonymous</permission>
+      <permission>hudson.scm.SCM.Tag:anonymous</permission>
+      <permission>hudson.model.Item.Move:anonymous</permission>
+      <permission>hudson.model.Item.Discover:anonymous</permission>
+      <permission>hudson.model.Run.Update:anonymous</permission>
+    </hudson.security.AuthorizationMatrixProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>true</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders/>
+  <publishers/>
+  <buildWrappers/>
+</project>

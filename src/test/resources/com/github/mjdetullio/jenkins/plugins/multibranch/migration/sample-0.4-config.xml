@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<freestyle-multi-branch-project plugin="multi-branch-project-plugin@0.4.1">
+  <actions/>
+  <description></description>
+  <properties>
+    <com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty plugin="cloudbees-folder@5.1">
+      <domainCredentialsMap class="hudson.util.CopyOnWriteMap$Hash">
+        <entry>
+          <com.cloudbees.plugins.credentials.domains.Domain plugin="credentials@1.24">
+            <specifications/>
+          </com.cloudbees.plugins.credentials.domains.Domain>
+          <java.util.concurrent.CopyOnWriteArrayList>
+            <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl plugin="credentials@1.24">
+              <id>bce4125e-e1cc-4793-983e-26dfb6075b2c</id>
+              <description>asdfas</description>
+              <username>asdasdf</username>
+              <password>u52SvkLBI84+zt2q7OEx0tUOmdsOI6HEh2Ont9NdjlU=</password>
+            </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+          </java.util.concurrent.CopyOnWriteArrayList>
+        </entry>
+      </domainCredentialsMap>
+    </com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty>
+  </properties>
+  <views>
+    <branch-list-view>
+      <owner class="freestyle-multi-branch-project" reference="../../.."/>
+      <name>All</name>
+      <filterExecutors>false</filterExecutors>
+      <filterQueue>false</filterQueue>
+      <properties class="hudson.model.View$PropertyList"/>
+      <jobNames>
+        <comparator class="hudson.util.CaseInsensitiveComparator"/>
+      </jobNames>
+      <jobFilters/>
+      <columns>
+        <hudson.views.StatusColumn/>
+        <hudson.views.WeatherColumn/>
+        <hudson.views.JobColumn/>
+        <hudson.views.LastSuccessColumn/>
+        <hudson.views.LastFailureColumn/>
+        <hudson.views.LastDurationColumn/>
+        <hudson.views.BuildButtonColumn/>
+      </columns>
+      <includeRegex>.*</includeRegex>
+      <recurse>false</recurse>
+    </branch-list-view>
+  </views>
+  <viewsTabBar class="hudson.views.DefaultViewsTabBar"/>
+  <primaryView>All</primaryView>
+  <healthMetrics>
+    <com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric plugin="cloudbees-folder@5.1"/>
+  </healthMetrics>
+  <icon class="com.github.mjdetullio.jenkins.plugins.multibranch.BallColorFolderIcon">
+    <owner class="freestyle-multi-branch-project" reference="../.."/>
+  </icon>
+  <orphanedItemStrategy class="com.cloudbees.hudson.plugins.folder.computed.DefaultOrphanedItemStrategy" plugin="cloudbees-folder@5.1">
+    <pruneDeadBranches>true</pruneDeadBranches>
+    <daysToKeep>5</daysToKeep>
+    <numToKeep>15</numToKeep>
+  </orphanedItemStrategy>
+  <triggers>
+    <hudson.triggers.TimerTrigger>
+      <spec>H 12 * * *</spec>
+    </hudson.triggers.TimerTrigger>
+    <com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger plugin="cloudbees-folder@5.1">
+      <spec>*/6 * * * *</spec>
+      <interval>1200000</interval>
+    </com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger>
+  </triggers>
+  <disabled>false</disabled>
+  <disabledSubProjects/>
+  <allowAnonymousSync>true</allowAnonymousSync>
+  <suppressTriggerNewBranchBuild>true</suppressTriggerNewBranchBuild>
+  <scmSource class="jenkins.plugins.git.GitSCMSource" plugin="git@2.4.0">
+    <id>9fd73386-06b9-4d7e-b8e4-38602f531cec</id>
+    <remote>https://github.com/mjdetullio/literate-project.git</remote>
+    <credentialsId></credentialsId>
+    <includes>*</includes>
+    <excludes></excludes>
+    <ignoreOnPushNotifications>false</ignoreOnPushNotifications>
+  </scmSource>
+</freestyle-multi-branch-project>

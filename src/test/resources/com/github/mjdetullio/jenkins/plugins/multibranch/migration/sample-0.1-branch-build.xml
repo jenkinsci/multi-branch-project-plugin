@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.github.mjdetullio.jenkins.plugins.multibranch.FreeStyleBranchBuild plugin="multi-branch-project-plugin@0.1.3">
+  <actions>
+    <hudson.model.CauseAction>
+      <causes>
+        <hudson.triggers.SCMTrigger_-SCMTriggerCause/>
+      </causes>
+    </hudson.model.CauseAction>
+    <hudson.triggers.SCMTrigger_-BuildAction/>
+    <org.jenkinsci.plugins.envinject.EnvInjectPluginAction plugin="envinject@1.92.1">
+      <build class="com.github.mjdetullio.jenkins.plugins.multibranch.FreeStyleBranchBuild" reference="../../.."/>
+    </org.jenkinsci.plugins.envinject.EnvInjectPluginAction>
+    <hudson.plugins.git.util.BuildData plugin="git@2.4.0">
+      <buildsByBranchName>
+        <entry>
+          <string>origin/development</string>
+          <hudson.plugins.git.util.Build>
+            <marked plugin="git-client@1.19.0">
+              <sha1>7167dc03ed80fcb4a55878bd4a3941787a9879f0</sha1>
+              <branches class="list">
+                <hudson.plugins.git.Branch>
+                  <sha1 reference="../../../sha1"/>
+                  <name>origin/development</name>
+                </hudson.plugins.git.Branch>
+              </branches>
+            </marked>
+            <revision reference="../marked"/>
+            <hudsonBuildNumber>1</hudsonBuildNumber>
+          </hudson.plugins.git.util.Build>
+        </entry>
+      </buildsByBranchName>
+      <lastBuild reference="../buildsByBranchName/entry/hudson.plugins.git.util.Build"/>
+      <remoteUrls>
+        <string>https://github.com/mjdetullio/literate-project.git</string>
+      </remoteUrls>
+    </hudson.plugins.git.util.BuildData>
+    <hudson.plugins.git.GitTagAction plugin="git@2.4.0">
+      <tags class="hudson.util.CopyOnWriteMap$Tree">
+        <entry>
+          <string>origin/development</string>
+          <list/>
+        </entry>
+      </tags>
+      <ws>/Users/matthewdet/jenkins/workspace/test/development</ws>
+    </hudson.plugins.git.GitTagAction>
+    <hudson.scm.SCMRevisionState_-None/>
+  </actions>
+  <queueId>6</queueId>
+  <timestamp>1455574526905</timestamp>
+  <startTime>1455574526917</startTime>
+  <result>SUCCESS</result>
+  <duration>1180</duration>
+  <charset>UTF-8</charset>
+  <keepLog>false</keepLog>
+  <builtOn></builtOn>
+  <workspace>/Users/matthewdet/jenkins/workspace/test/development</workspace>
+  <hudsonVersion>1.642</hudsonVersion>
+  <scm class="hudson.plugins.git.GitChangeLogParser" plugin="git@2.4.0">
+    <authorOrCommitter>false</authorOrCommitter>
+  </scm>
+  <culprits class="com.google.common.collect.EmptyImmutableSortedSet"/>
+</com.github.mjdetullio.jenkins.plugins.multibranch.FreeStyleBranchBuild>

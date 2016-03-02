@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<freestyle-multi-branch-project plugin="multi-branch-project-plugin@0.3">
+  <actions/>
+  <description></description>
+  <views class="java.util.concurrent.CopyOnWriteArrayList">
+    <branch-list-view>
+      <owner class="freestyle-multi-branch-project" reference="../../.."/>
+      <name>All</name>
+      <filterExecutors>false</filterExecutors>
+      <filterQueue>false</filterQueue>
+      <properties class="hudson.model.View$PropertyList"/>
+      <jobNames>
+        <comparator class="hudson.util.CaseInsensitiveComparator"/>
+      </jobNames>
+      <jobFilters/>
+      <columns>
+        <hudson.views.StatusColumn/>
+        <hudson.views.WeatherColumn/>
+        <hudson.views.JobColumn/>
+        <hudson.views.LastSuccessColumn/>
+        <hudson.views.LastFailureColumn/>
+        <hudson.views.LastDurationColumn/>
+        <hudson.views.BuildButtonColumn/>
+      </columns>
+      <includeRegex>.*</includeRegex>
+      <recurse>false</recurse>
+    </branch-list-view>
+  </views>
+  <primaryView>All</primaryView>
+  <disabled>false</disabled>
+  <disabledSubProjects class="hudson.util.PersistedList"/>
+  <syncBranchesTrigger>
+    <spec>H/5 * * * *</spec>
+  </syncBranchesTrigger>
+  <allowAnonymousSync>true</allowAnonymousSync>
+  <scmSource class="jenkins.plugins.git.GitSCMSource" plugin="git@2.4.0">
+    <id>1fe4cc48-475f-4d92-87f6-4bc805f1252e</id>
+    <remote>https://github.com/mjdetullio/literate-project.git</remote>
+    <credentialsId></credentialsId>
+    <includes>*</includes>
+    <excludes></excludes>
+    <ignoreOnPushNotifications>false</ignoreOnPushNotifications>
+  </scmSource>
+</freestyle-multi-branch-project>
