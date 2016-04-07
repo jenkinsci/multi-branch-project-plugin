@@ -590,8 +590,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
             P project = observer.shouldUpdate(branchNameEncoded);
 
-            if (!observer.mayCreate(branchNameEncoded)) {
-                listener.getLogger().println("Ignoring duplicate " + branchNameEncoded);
+            if (!observer.mayCreate(branchNameEncoded) && !observer.shouldUpdate(branchNameEncoded)) {
+                listener.getLogger().println("Ignoring " + branchNameEncoded + " (should not be created or updated)");
                 continue;
             }
 
