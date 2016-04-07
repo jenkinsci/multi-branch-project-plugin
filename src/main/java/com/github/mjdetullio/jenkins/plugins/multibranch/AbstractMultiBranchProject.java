@@ -592,6 +592,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
             try {
                 if (project == null) {
+                    if (!observer.mayCreate(branchNameEncoded)) {
+                        listener.getLogger().println("Skipping creation for '" + branchNameEncoded + "' - mayCreate returned false");
+                        continue;
+                    }
+
                     listener.getLogger().println("Creating project for branch " + branchNameEncoded);
 
                     project = createNewSubProject(this, branchNameEncoded);
