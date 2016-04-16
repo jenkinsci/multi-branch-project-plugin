@@ -85,7 +85,7 @@ public final class MavenMultiBranchProject extends AbstractMultiBranchProject<Ma
     /**
      * Our project's descriptor.
      */
-    @Extension
+    @Extension(optional = true)
     public static class DescriptorImpl extends AbstractFolderDescriptor {
         /**
          * {@inheritDoc}
