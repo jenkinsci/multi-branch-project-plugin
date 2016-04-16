@@ -1075,8 +1075,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
     /**
      * Migrates <code>SyncBranchesTrigger</code> to {@link hudson.triggers.TimerTrigger} and copies the
-     * template's {@link hudson.security.AuthorizationMatrixProperty} to the parent as a
-     * {@link com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty}.
+     * template's {@code hudson.security.AuthorizationMatrixProperty} to the parent as a
+     * {@code com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty}.
      */
     @SuppressWarnings(UNUSED)
     @Initializer(before = InitMilestone.PLUGINS_STARTED)
