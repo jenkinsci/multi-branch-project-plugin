@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <div>
     This plugin adds additional project types that create sub-projects for each branch using a shared configuration.
 </div>

@@ -933,7 +933,9 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     }
 
     /**
-     * Returns a list of ViewDescriptors that we want to use for this project type.  Used by newView.jelly.
+     * Returns a list of {@link ViewDescriptor}s that we want to use for this project type.  Used by newView.jelly.
+     *
+     * @return list of {@link ViewDescriptor}s that we want to use for this project type
      */
     @SuppressWarnings(UNUSED)
     public static List<ViewDescriptor> getViewDescriptors() {
@@ -942,8 +944,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     }
 
     /**
-     * Returns a list of SCMSourceDescriptors that we want to use for this project type.
-     * Used by configure-entries.jelly.
+     * Returns a list of {@link SCMSourceDescriptor}s that we want to use for this project type.
+     * Used by configure-scm.jelly.
+     *
+     * @param onlyUserInstantiable {@code true} if only those descriptors that are {@link SCMSourceDescriptor#isUserInstantiable()}.
+     * @return list of {@link SCMSourceDescriptor}s that we want to use for this project type
      */
     public static List<SCMSourceDescriptor> getSCMSourceDescriptors(boolean onlyUserInstantiable) {
         List<SCMSourceDescriptor> descriptors =
@@ -1074,9 +1079,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     }
 
     /**
-     * Migrates <code>SyncBranchesTrigger</code> to {@link hudson.triggers.TimerTrigger} and copies the
+     * Migrates {@code SyncBranchesTrigger} to {@link hudson.triggers.TimerTrigger} and copies the
      * template's {@code hudson.security.AuthorizationMatrixProperty} to the parent as a
      * {@code com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty}.
+     *
+     * @throws IOException if errors reading/modifying files during migration
      */
     @SuppressWarnings(UNUSED)
     @Initializer(before = InitMilestone.PLUGINS_STARTED)
