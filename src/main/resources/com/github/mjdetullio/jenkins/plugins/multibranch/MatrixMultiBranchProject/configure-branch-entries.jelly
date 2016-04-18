@@ -31,36 +31,32 @@ THE SOFTWARE.
 
     <p:config-trigger/>
 
- <f:section title="${%Configuration Matrix}">
-    <!-- Needed for LabelAxis, but including these from LabelAxis/config.jelly is too late -->
-    <l:yui module="treeview" />
-    <link rel="stylesheet" type="text/css"
-          href="${rootURL}/scripts/yui/treeview/assets/skins/sam/treeview.css" />
+    <f:section title="${%Configuration Matrix}">
+        <!-- Needed for LabelAxis, but including these from LabelAxis/config.jelly is too late -->
+        <l:yui module="treeview" />
+        <link rel="stylesheet" type="text/css" href="${rootURL}/scripts/yui/treeview/assets/skins/sam/treeview.css" />
 
-    <f:block>
-      <f:hetero-list name="axis" hasHeader="true"
-                     descriptors="${descriptor.axisDescriptors}"
-                     items="${it.axes}"
-                     addCaption="${%Add axis}"/>
-    </f:block>
+        <f:block>
+            <f:hetero-list name="axis" hasHeader="true" descriptors="${descriptor.axisDescriptors}" items="${it.axes}" addCaption="${%Add axis}"/>
+        </f:block>
 
-    <f:optionalBlock name="hasCombinationFilter" title="${%Combination Filter}" checked="${!empty(it.combinationFilter)}"
-        help="/plugin/matrix-project/help/matrix/combinationfilter.html">
-	    <f:entry title="${%Filter}">
-	      <f:textbox name="combinationFilter" value="${it.combinationFilter}" />
-	    </f:entry>
-    </f:optionalBlock>
+        <f:optionalBlock name="hasCombinationFilter" title="${%Combination Filter}" checked="${!empty(it.combinationFilter)}"
+            help="/plugin/matrix-project/help/matrix/combinationfilter.html">
+	        <f:entry title="${%Filter}">
+	            <f:textbox name="combinationFilter" value="${it.combinationFilter}" />
+	        </f:entry>
+        </f:optionalBlock>
 
-    <j:choose>
-      <j:when test="${descriptor.executionStrategyDescriptors.size() gt 1}">
-        <f:dropdownDescriptorSelector title="${%Execution Strategy}" field="executionStrategy"/>
-      </j:when>
-      <j:otherwise>
-        <!-- for the default case when there's only one execution strategy, render it inline to simplify the UI -->
-        <f:property field="executionStrategy" propertyDescriptor="${descriptor.executionStrategyDescriptors.get(0)}"/>
-      </j:otherwise>
-    </j:choose>
-  </f:section>
+        <j:choose>
+            <j:when test="${descriptor.executionStrategyDescriptors.size() gt 1}">
+                <f:dropdownDescriptorSelector title="${%Execution Strategy}" field="executionStrategy"/>
+            </j:when>
+            <j:otherwise>
+                <!-- for the default case when there's only one execution strategy, render it inline to simplify the UI -->
+                <f:property field="executionStrategy" propertyDescriptor="${descriptor.executionStrategyDescriptors.get(0)}"/>
+            </j:otherwise>
+        </j:choose>
+    </f:section>
 
     <p:config-buildWrappers/>
     <p:config-builders/>
