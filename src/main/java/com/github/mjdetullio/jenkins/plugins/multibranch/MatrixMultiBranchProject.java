@@ -38,7 +38,6 @@ import jenkins.model.Jenkins;
  * @author Matthew DeTullio
  */
 @SuppressWarnings("unused")
-@Extension(optional = true)
 public final class MatrixMultiBranchProject extends AbstractMultiBranchProject<MatrixProject, MatrixBuild> {
 
     private static final String UNUSED = "unused";
@@ -77,7 +76,7 @@ public final class MatrixMultiBranchProject extends AbstractMultiBranchProject<M
     /**
      * Our project's descriptor.
      */
-    @Extension
+    @Extension(optional = true)
     public static class DescriptorImpl extends AbstractFolderDescriptor {
         /**
          * {@inheritDoc}
