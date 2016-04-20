@@ -94,6 +94,21 @@ public final class IvyMultiBranchProject extends
 	return FormValidation.ok();
     }
 
+    public FormValidation doCheckIvySettingsFile(@QueryParameter String value)
+	    throws IOException, ServletException {
+	String v = Util.fixEmpty(value);
+	if ((v == null) || (v.length() == 0)) {
+	    // Null values are allowed.
+	    return FormValidation.ok();
+	}
+	if ((v.startsWith("/")) || (v.startsWith("\\"))
+		|| (v.matches("^\\w\\:\\\\.*"))) {
+	    return FormValidation
+		    .error("Ivy settings file must be a relative path.");
+	}
+	return FormValidation.ok();
+    }
+
     /**
      * Our project's descriptor.
      */
@@ -123,20 +138,5 @@ public final class IvyMultiBranchProject extends
     public static void registerXStream() {
 	Items.XSTREAM.alias("ivy-multi-branch-project",
 		IvyMultiBranchProject.class);
-    }
-
-    public FormValidation doCheckIvySettingsFile(@QueryParameter String value)
-	    throws IOException, ServletException {
-	String v = Util.fixEmpty(value);
-	if ((v == null) || (v.length() == 0)) {
-	    // Null values are allowed.
-	    return FormValidation.ok();
-	}
-	if ((v.startsWith("/")) || (v.startsWith("\\"))
-		|| (v.matches("^\\w\\:\\\\.*"))) {
-	    return FormValidation
-		    .error("Ivy settings file must be a relative path.");
-	}
-	return FormValidation.ok();
     }
 }
