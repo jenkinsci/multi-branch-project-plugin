@@ -46,85 +46,97 @@ import org.kohsuke.stapler.QueryParameter;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderDescriptor;
 
 /**
- * @author Matthew DeTullio
+ * @author Florian Bühlmann
  */
 @SuppressWarnings("unchecked")
-public final class IvyMultiBranchProject extends AbstractMultiBranchProject<IvyModuleSet, IvyModuleSetBuild> {
+public final class IvyMultiBranchProject extends
+	AbstractMultiBranchProject<IvyModuleSet, IvyModuleSetBuild> {
 
-  /**
-   * Constructor that specifies the {@link hudson.model.ItemGroup} for this project and the project name.
-   *
-   * @param parent the project's parent {@link hudson.model.ItemGroup}
-   * @param name the project's name
-   */
-  public IvyMultiBranchProject(ItemGroup parent, String name) {
-    super(parent, name);
-  }
-
-  @Override
-  protected IvyModuleSet createNewSubProject(AbstractMultiBranchProject parent, String branchName) {
-    return new IvyModuleSet(parent, branchName);
-  }
-
-  protected Class<IvyModuleSetBuild> getBuildClass() {
-    return IvyModuleSetBuild.class;
-  }
-
-  @Override
-  public AbstractFolderDescriptor getDescriptor() {
-    return (DescriptorImpl)Jenkins.getActiveInstance().getDescriptorOrDie(IvyMultiBranchProject.class);
-  }
-
-  /**
-   * Stapler URL binding used by the configure page to check the location of the POM, alternate settings file, etc - any file.
-   *
-   * @param value file to check
-   * @return validation of file
-   */
-  public FormValidation doCheckFileInWorkspace(@QueryParameter String value) {
-    // Probably not great
-    return FormValidation.ok();
-  }
-
-  /**
-   * Our project's descriptor.
-   */
-  @Extension(optional = true)
-  public static class DescriptorImpl extends AbstractFolderDescriptor {
     /**
-     * {@inheritDoc}
+     * Constructor that specifies the {@link hudson.model.ItemGroup} for this
+     * project and the project name.
+     *
+     * @param parent
+     *            the project's parent {@link hudson.model.ItemGroup}
+     * @param name
+     *            the project's name
      */
+    public IvyMultiBranchProject(ItemGroup parent, String name) {
+	super(parent, name);
+    }
+
     @Override
-    public String getDisplayName() {
-      return Messages.IvyMultiBranchProject_DisplayName();
+    protected IvyModuleSet createNewSubProject(
+	    AbstractMultiBranchProject parent, String branchName) {
+	return new IvyModuleSet(parent, branchName);
+    }
+
+    protected Class<IvyModuleSetBuild> getBuildClass() {
+	return IvyModuleSetBuild.class;
+    }
+
+    @Override
+    public AbstractFolderDescriptor getDescriptor() {
+	return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(
+		IvyMultiBranchProject.class);
     }
 
     /**
-     * {@inheritDoc}
+     * Stapler URL binding used by the configure page to check the location of
+     * the POM, alternate settings file, etc - any file.
+     *
+     * @param value
+     *            file to check
+     * @return validation of file
      */
-    @Override
-    public TopLevelItem newInstance(ItemGroup parent, String name) {
-      return new IvyMultiBranchProject(parent, name);
+    public FormValidation doCheckFileInWorkspace(@QueryParameter String value) {
+	// Probably not great
+	return FormValidation.ok();
     }
-  }
 
-  /**
-   * Gives this class an alias for configuration XML.
-   */
-  @Initializer(before = InitMilestone.PLUGINS_STARTED)
-  public static void registerXStream() {
-    Items.XSTREAM.alias("ivy-multi-branch-project", IvyMultiBranchProject.class);
-  }
+    /**
+     * Our project's descriptor.
+     */
+    @Extension(optional = true)
+    public static class DescriptorImpl extends AbstractFolderDescriptor {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getDisplayName() {
+	    return Messages.IvyMultiBranchProject_DisplayName();
+	}
 
-  public FormValidation doCheckIvySettingsFile(@QueryParameter String value) throws IOException, ServletException {
-    String v = Util.fixEmpty(value);
-    if ((v == null) || (v.length() == 0)) {
-      // Null values are allowed.
-      return FormValidation.ok();
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public TopLevelItem newInstance(ItemGroup parent, String name) {
+	    return new IvyMultiBranchProject(parent, name);
+	}
     }
-    if ((v.startsWith("/")) || (v.startsWith("\\")) || (v.matches("^\\w\\:\\\\.*"))) {
-      return FormValidation.error("Ivy settings file must be a relative path.");
+
+    /**
+     * Gives this class an alias for configuration XML.
+     */
+    @Initializer(before = InitMilestone.PLUGINS_STARTED)
+    public static void registerXStream() {
+	Items.XSTREAM.alias("ivy-multi-branch-project",
+		IvyMultiBranchProject.class);
     }
-    return FormValidation.ok();
-  }
+
+    public FormValidation doCheckIvySettingsFile(@QueryParameter String value)
+	    throws IOException, ServletException {
+	String v = Util.fixEmpty(value);
+	if ((v == null) || (v.length() == 0)) {
+	    // Null values are allowed.
+	    return FormValidation.ok();
+	}
+	if ((v.startsWith("/")) || (v.startsWith("\\"))
+		|| (v.matches("^\\w\\:\\\\.*"))) {
+	    return FormValidation
+		    .error("Ivy settings file must be a relative path.");
+	}
+	return FormValidation.ok();
+    }
 }
