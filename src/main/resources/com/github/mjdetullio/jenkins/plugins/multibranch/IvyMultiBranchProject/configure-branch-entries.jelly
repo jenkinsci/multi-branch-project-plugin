@@ -22,7 +22,7 @@ THE SOFTWARE.
 -->
 
 <!--
-  Sub-project config
+    Sub-project config
 -->
 
 <?jelly escape-by-default='true'?>
@@ -31,54 +31,54 @@ THE SOFTWARE.
     <j:set var="descriptor" value="${it.descriptor}"/>
     <j:set var="instance" value="${it}"/>
 
-  <p:config-trigger>
-    <p:config-upstream-pseudo-trigger />
-  </p:config-trigger>
+    <p:config-trigger>
+        <p:config-upstream-pseudo-trigger />
+    </p:config-trigger>
 
-  <f:section title="${%Ivy Module Configuration}">
-    <f:entry title="${%Ivy xml files}" field="ivyFilePattern">
-      <f:textbox />
-    </f:entry>
-    <f:advanced>
-      <f:entry title="${%Excludes}" field="ivyFileExcludesPattern">
-        <f:textbox />
-      </f:entry>
-    </f:advanced>
-    <f:entry title="${%Relative path to descriptor from module root}" field="relativePathToDescriptorFromModuleRoot">
-      <f:textbox />
-    </f:entry>
-    <f:entry title="${%Ivy branch}" field="ivyBranch">
-      <f:textbox />
-    </f:entry>
-    <f:entry title="${%Ivy settings}" field="ivySettingsFile">
-      <f:textbox checkUrl="'checkIvySettingsFile?value='+escape(this.value)"/>
-    </f:entry>
-    <f:entry title="${%Ivy settings property files}" field="ivySettingsPropertyFiles">
-      <f:textbox />
-    </f:entry>
-    <f:dropdownList name="ivyBuilderType" title="${%Build with}">
-      <j:forEach var="descriptor" items="${it.builderTypeDescriptors}" varStatus="loop">
-        <j:set var="instance" value="${descriptor==it.ivyBuilderType.descriptor?it.ivyBuilderType:null}"/>
-        <f:dropdownListBlock title="${descriptor.displayName}" value="${loop.index}"
-                             selected="${instance!=null}" staplerClass="${descriptor.clazz.name}">
-          <st:include page="${descriptor.configPage}" from="${descriptor}"/>
-        </f:dropdownListBlock>
-      </j:forEach>
-    </f:dropdownList>
-    <f:advanced>
-      <f:optionalBlock title="${%Incremental build - only build changed modules}" name="incrementalBuild" checked="${it.incrementalBuild}" help="/plugin/ivy/incremental.html">
-        <f:entry title="${%Changed modules property}" field="changedModulesProperty">
-          <f:textbox />
+    <f:section title="${%Ivy Module Configuration}">
+        <f:entry title="${%Ivy xml files}" field="ivyFilePattern">
+            <f:textbox />
         </f:entry>
-      </f:optionalBlock>
-      <f:optionalBlock title="${%Build modules as separate jobs}" name="perModuleBuild" checked="${!it.aggregatorStyleBuild}" help="/plugin/ivy/aggregator.html">
-      </f:optionalBlock>
-      <f:optionalBlock title="${%Use parameters from upstream builds}" name="useUpstreamParameters" checked="${it.useUpstreamParameters}" help="/plugin/ivy/use-upstream-parameters.html">
-      </f:optionalBlock>
-      <p:config-customWorkspace />
-    </f:advanced>
-  </f:section>
+        <f:advanced>
+            <f:entry title="${%Excludes}" field="ivyFileExcludesPattern">
+                <f:textbox />
+            </f:entry>
+        </f:advanced>
+        <f:entry title="${%Relative path to descriptor from module root}" field="relativePathToDescriptorFromModuleRoot">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%Ivy branch}" field="ivyBranch">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="${%Ivy settings}" field="ivySettingsFile">
+            <f:textbox checkUrl="'checkIvySettingsFile?value='+escape(this.value)"/>
+        </f:entry>
+        <f:entry title="${%Ivy settings property files}" field="ivySettingsPropertyFiles">
+            <f:textbox />
+        </f:entry>
+        <f:dropdownList name="ivyBuilderType" title="${%Build with}">
+            <j:forEach var="descriptor" items="${it.builderTypeDescriptors}" varStatus="loop">
+                <j:set var="instance" value="${descriptor==it.ivyBuilderType.descriptor?it.ivyBuilderType:null}"/>
+                <f:dropdownListBlock title="${descriptor.displayName}" value="${loop.index}"
+                                     selected="${instance!=null}" staplerClass="${descriptor.clazz.name}">
+                    <st:include page="${descriptor.configPage}" from="${descriptor}"/>
+                </f:dropdownListBlock>
+            </j:forEach>
+        </f:dropdownList>
+        <f:advanced>
+            <f:optionalBlock title="${%Incremental build - only build changed modules}" name="incrementalBuild" checked="${it.incrementalBuild}" help="/plugin/ivy/incremental.html">
+                <f:entry title="${%Changed modules property}" field="changedModulesProperty">
+                    <f:textbox />
+                </f:entry>
+            </f:optionalBlock>
+            <f:optionalBlock title="${%Build modules as separate jobs}" name="perModuleBuild" checked="${!it.aggregatorStyleBuild}" help="/plugin/ivy/aggregator.html">
+            </f:optionalBlock>
+            <f:optionalBlock title="${%Use parameters from upstream builds}" name="useUpstreamParameters" checked="${it.useUpstreamParameters}" help="/plugin/ivy/use-upstream-parameters.html">
+            </f:optionalBlock>
+            <p:config-customWorkspace />
+        </f:advanced>
+    </f:section>
 
-  <p:config-buildWrappers />
-  <p:config-publishers />
+    <p:config-buildWrappers />
+    <p:config-publishers />
 </j:jelly>
