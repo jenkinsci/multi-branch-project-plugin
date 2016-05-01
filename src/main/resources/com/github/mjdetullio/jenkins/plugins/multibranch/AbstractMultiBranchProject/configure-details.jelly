@@ -30,7 +30,7 @@ THE SOFTWARE.
     <f:block>
         <hr/>
         <h3>${%Branch Management}</h3>
-        <p>Describes how sub-projects are created based on available SCM branches.</p>
+        <p>Describes how sub-projects are created or updated based on available SCM branches.</p>
         <hr/>
     </f:block>
 
@@ -41,6 +41,10 @@ THE SOFTWARE.
     <f:optionalBlock field="suppressTriggerNewBranchBuild"
                      title="${%Suppress automatic build trigger after discovering new branches}"
                      checked="${it.suppressTriggerNewBranchBuild}"/>
+
+		<f:optionalBlock field="suppressUpdatingConfigOfExistingProjects"
+                     title="${%Do not update configuration of existing sub-projects}"
+                     checked="${it.suppressUpdatingConfigOfExistingProjects}"/>
 
     <st:include page="configure-scm"/>
 
