@@ -94,6 +94,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Vector;
 
 /**
  * @author Matthew DeTullio
@@ -1079,6 +1080,37 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     }
 
     /**
+     * Populate a list of config files
+     * (Avoid traversing down into directories that may be expensive to stat)
+     * @param dir the directory to traverse
+     * @param files the list to populate
+     *
+     * @throws IOException
+     */
+    private static void getConfigFiles(File dir, Collection<File> files) throws IOException {
+        File[] contents = dir.listFiles();
+        if (null == contents) {
+            throw new IOException("Tried to treat '" + dir.getCanonicalPath().toString() + "' as a directory, but could not get a listing");
+        }
+
+        for (final File file : contents) {
+            if (file.getName().equals("config.xml")) {
+                files.add(file);
+            }
+
+            // Don't descend into dirs that we know will be expensive
+            if (file.getName().equals("archive") || file.getName().equals("builds")) {
+                continue;
+            }
+
+            if (file.getCanonicalFile().isDirectory()) {
+                getConfigFiles(file, files);
+            }
+        }
+    }
+
+
+    /**
      * Migrates {@code SyncBranchesTrigger} to {@link hudson.triggers.TimerTrigger} and copies the
      * template's {@code hudson.security.AuthorizationMatrixProperty} to the parent as a
      * {@code com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty}.
@@ -1096,8 +1128,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
             return;
         }
 
-        Collection<File> configFiles =
-                FileUtils.listFiles(projectsDir, new NameFileFilter("config.xml"), TrueFileFilter.TRUE);
+        Vector<File> configFiles = new Vector<File>();
+        getConfigFiles(projectsDir, configFiles);
 
         for (final File configFile : configFiles) {
             String xml = FileUtils.readFileToString(configFile);
