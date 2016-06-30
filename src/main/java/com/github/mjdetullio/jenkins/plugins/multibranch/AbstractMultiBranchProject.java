@@ -216,7 +216,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
             if (getItem(disabledSubProject) == null) {
                 // Didn't find item, so don't add it to new list
                 // Do we have the encoded item though?
-                String encoded = Util.rawEncode(disabledSubProject);
+                String encoded = this.encodeBranchName(disabledSubProject);
 
                 if (getItem(encoded) != null) {
                     // Found encoded item, add encoded name to new list
@@ -558,6 +558,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
         return new SyncBranches<P, B>(this, (SyncBranches<P, B>) previous);
     }
 
+    protected String encodeBranchName(String branchName)
+    {
+        return Util.rawEncode(branchName).replace("%2F","___");
+    }
+
     /**
      * Defines how children are managed when Sync Branches is run.  It will retrieve the latest
      * {@link SCMHead}s and consult the {@link ChildObserver} to determine whether to update an
@@ -582,7 +587,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
         for (SCMHead head : heads) {
             String branchName = head.getName();
-            String branchNameEncoded = Util.rawEncode(branchName);
+            String branchNameEncoded = this.encodeBranchName(branchName);
 
             listener.getLogger().println("Branch " + branchName + " encoded to " + branchNameEncoded);
 
@@ -975,6 +980,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * @return the decoded string.
      */
     public static String rawDecode(String s) {
+        s = s.replace("___", "%2F");
+
         final byte[] bytes; // should be US-ASCII but we can be tolerant
         try {
             bytes = s.getBytes("UTF-8");
