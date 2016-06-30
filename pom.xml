@@ -127,4 +127,17 @@
             <optional>true</optional>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jenkins-ci.tools</groupId>
+                <artifactId>maven-hpi-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <compatibleSinceVersion>0.5</compatibleSinceVersion>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
