@@ -216,7 +216,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
             if (getItem(disabledSubProject) == null) {
                 // Didn't find item, so don't add it to new list
                 // Do we have the encoded item though?
-                String encoded = Util.rawEncode(disabledSubProject);
+                String encoded = Util.rawEncode(disabledSubProject.replace("-", "--").replace("/", "-"));
 
                 if (getItem(encoded) != null) {
                     // Found encoded item, add encoded name to new list
@@ -582,7 +582,12 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
         for (SCMHead head : heads) {
             String branchName = head.getName();
-            String branchNameEncoded = Util.rawEncode(branchName);
+            //Branch name with "/" will be replaced with "-", since "/" would be
+            //"%2F" after Util.rawEncode which is not compatible with many
+            //python applications
+            String replacedName = branchName.replace("-", "--").replace("/", "-");
+
+            String branchNameEncoded = Util.rawEncode(replacedName);
 
             listener.getLogger().println("Branch " + branchName + " encoded to " + branchNameEncoded);
 
