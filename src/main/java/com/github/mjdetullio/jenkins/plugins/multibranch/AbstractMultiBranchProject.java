@@ -116,6 +116,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
     private boolean suppressTriggerNewBranchBuild;
 
+    private boolean suppressUpdatingConfigOfExistingProjects;
+
     protected volatile SCMSource scmSource;
 
     /**
@@ -414,6 +416,28 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     }
 
     /**
+     * Gets whether sync suppresses updating config of existing sub-projects.
+     *
+     * @return boolean
+     */
+    @SuppressWarnings(UNUSED)
+    public boolean isSuppressUpdatingConfigOfExistingProjects() {
+        return suppressUpdatingConfigOfExistingProjects;
+    }
+
+    /**
+     * Sets whether sync suppresses updating config of existing sub-projects.
+     *
+     * @param b true/false
+     * @throws IOException if problems saving
+     */
+    @SuppressWarnings(UNUSED)
+    public void setSuppressUpdatingConfigOfExistingProjects(boolean b) throws IOException {
+        suppressUpdatingConfigOfExistingProjects = b;
+        save();
+    }
+
+    /**
      * Exposes a URI that allows the trigger of a branch sync.
      *
      * @param req Stapler request
@@ -523,6 +547,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
 
         allowAnonymousSync = json.has("allowAnonymousSync");
         suppressTriggerNewBranchBuild = json.has("suppressTriggerNewBranchBuild");
+        suppressUpdatingConfigOfExistingProjects = json.has("suppressUpdatingConfigOfExistingProjects");
 
         JSONObject scmSourceJson = json.optJSONObject("scmSource");
         if (scmSourceJson == null) {
@@ -587,6 +612,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
             listener.getLogger().println("Branch " + branchName + " encoded to " + branchNameEncoded);
 
             P project = observer.shouldUpdate(branchNameEncoded);
+
+            if (project != null && suppressUpdatingConfigOfExistingProjects) {
+                listener.getLogger().println("Skipping updating project for branch " + branchNameEncoded);
+                continue;
+            }
 
             try {
                 if (project == null) {
