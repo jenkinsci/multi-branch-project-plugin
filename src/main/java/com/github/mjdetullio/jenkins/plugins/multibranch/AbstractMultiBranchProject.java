@@ -27,7 +27,6 @@ import com.cloudbees.hudson.plugins.folder.computed.ChildObserver;
 import com.cloudbees.hudson.plugins.folder.computed.ComputedFolder;
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
 import com.cloudbees.hudson.plugins.folder.computed.OrphanedItemStrategy;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.XmlFile;
@@ -123,7 +122,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
     /**
      * {@inheritDoc}
      */
-    public AbstractMultiBranchProject(ItemGroup parent, String name) {
+    public AbstractMultiBranchProject(ItemGroup<? extends Item> parent, String name) {
         super(parent, name);
         init2();
     }
@@ -314,7 +313,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * {@inheritDoc}
      */
     @Override
-    @NonNull
+    @Nonnull
     public List<SCMSource> getSCMSources() {
         if (scmSource == null) {
             return Collections.emptyList();
@@ -326,8 +325,8 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * {@inheritDoc}
      */
     @Override
-    @edu.umd.cs.findbugs.annotations.CheckForNull
-    public SCMSource getSCMSource(@edu.umd.cs.findbugs.annotations.CheckForNull String sourceId) {
+    @CheckForNull
+    public SCMSource getSCMSource(@CheckForNull String sourceId) {
         if (scmSource != null && scmSource.getId().equals(sourceId)) {
             return scmSource;
         }
@@ -338,7 +337,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * {@inheritDoc}
      */
     @Override
-    public void onSCMSourceUpdated(@NonNull SCMSource source) {
+    public void onSCMSourceUpdated(@Nonnull SCMSource source) {
         scheduleBuild();
     }
 
@@ -346,11 +345,11 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * {@inheritDoc}
      */
     @Override
-    @edu.umd.cs.findbugs.annotations.CheckForNull
-    public SCMSourceCriteria getSCMSourceCriteria(@NonNull SCMSource source) {
+    @CheckForNull
+    public SCMSourceCriteria getSCMSourceCriteria(@Nonnull SCMSource source) {
         return new SCMSourceCriteria() {
             @Override
-            public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
+            public boolean isHead(@Nonnull Probe probe, @Nonnull TaskListener listener) throws IOException {
                 return true;
             }
         };
