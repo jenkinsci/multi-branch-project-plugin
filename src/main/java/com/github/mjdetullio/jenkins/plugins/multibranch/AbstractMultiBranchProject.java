@@ -66,8 +66,6 @@ import jenkins.scm.impl.SingleSCMSource;
 import jenkins.util.TimeDuration;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.NameFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
@@ -86,6 +84,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -93,7 +92,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Vector;
 
 /**
  * @author Matthew DeTullio
@@ -1082,14 +1080,15 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
      * Populate a list of config files
      * (Avoid traversing down into directories that may be expensive to stat)
      * @param dir the directory to traverse
-     * @param files the list to populate
      *
      * @throws IOException
      */
-    private static void getConfigFiles(File dir, Collection<File> files) throws IOException {
+    private static List<File> getConfigFiles(File dir) throws IOException {
+        List<File> files = new ArrayList<File>();
+
         File[] contents = dir.listFiles();
         if (null == contents) {
-            throw new IOException("Tried to treat '" + dir.getCanonicalPath().toString() + "' as a directory, but could not get a listing");
+            throw new IOException("Tried to treat '" + dir + "' as a directory, but could not get a listing");
         }
 
         for (final File file : contents) {
@@ -1102,10 +1101,12 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
                 continue;
             }
 
-            if (file.getCanonicalFile().isDirectory()) {
-                getConfigFiles(file, files);
+            if (file.isDirectory()) {
+                files.addAll(getConfigFiles(file));
             }
         }
+
+        return files;
     }
 
 
@@ -1127,8 +1128,7 @@ public abstract class AbstractMultiBranchProject<P extends AbstractProject<P, B>
             return;
         }
 
-        Vector<File> configFiles = new Vector<File>();
-        getConfigFiles(projectsDir, configFiles);
+        List<File> configFiles = getConfigFiles(projectsDir);
 
         for (final File configFile : configFiles) {
             String xml = FileUtils.readFileToString(configFile);
