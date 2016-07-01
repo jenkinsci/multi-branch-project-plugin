@@ -24,6 +24,7 @@
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
 import hudson.DescriptorExtensionList;
+import hudson.scm.NullSCM;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import net.sf.json.JSONObject;
@@ -106,6 +107,16 @@ public final class TemplateStaplerRequestWrapper extends RequestImpl {
      */
     @Override
     public JSONObject getSubmittedForm() throws ServletException {
-        return super.getSubmittedForm().getJSONObject("projectFactory");
+        JSONObject json = super.getSubmittedForm().getJSONObject("projectFactory");
+
+        // JENKINS-36043: Provide dummy SCM since the form elements were removed from the config page
+        // {"scm": {"value": "0", "stapler-class": "hudson.scm.NullSCM", "$class": "hudson.scm.NullSCM"}}
+        JSONObject scm = new JSONObject();
+        scm.put("value", "0");
+        scm.put("stapler-class", NullSCM.class.getName());
+        scm.put("$class", NullSCM.class.getName());
+
+        json.put("scm", scm);
+        return json;
     }
 }
