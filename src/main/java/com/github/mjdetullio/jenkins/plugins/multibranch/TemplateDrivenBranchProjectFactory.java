@@ -23,15 +23,26 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
+import hudson.BulkChange;
+import hudson.XmlFile;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Item;
+import hudson.model.Items;
+import hudson.model.Saveable;
 import hudson.model.TopLevelItem;
-import hudson.scm.NullSCM;
+import hudson.util.AtomicFileWriter;
 import jenkins.branch.Branch;
 import jenkins.branch.BranchProjectFactory;
+import jenkins.model.Jenkins;
+import jenkins.security.NotReallyRoleSensitiveCallable;
+import jenkins.util.xml.XMLUtils;
+import org.xml.sax.SAXException;
 
 import javax.annotation.Nonnull;
 import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -63,15 +74,18 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
     public P setBranch(@Nonnull P project, @Nonnull Branch branch) {
         BranchProjectProperty property = project.getProperty(BranchProjectProperty.class);
 
+        BulkChange bc = new BulkChange(project);
         try {
             if (property == null) {
                 project.addProperty(new BranchProjectProperty<P, B>(branch));
             } else {
                 property.setBranch(branch);
-                project.save();
             }
+            project.setScm(branch.getScm());
+            bc.commit();
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to set BranchProjectProperty", e);
+            bc.abort();
         }
 
         return project;
@@ -102,8 +116,9 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
         String displayName = project.getDisplayNameOrNull();
         boolean wasDisabled = project.isDisabled();
 
+        BulkChange bc = new BulkChange(project);
         try {
-            project.updateByXml((Source) new StreamSource(owner.getTemplate().getConfigFile().readRaw()));
+            updateByXml(project, new StreamSource(owner.getTemplate().getConfigFile().readRaw()));
 
             // Restore settings managed by this plugin
             setBranch(project, branch);
@@ -117,12 +132,60 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
             if (!wasDisabled) {
                 project.enable();
             }
+
+            bc.commit();
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to update project " + project.getName(), e);
+        } finally {
+            bc.abort();
         }
 
-        // TODO Branch.equals needs to compare the properties as well for BuildRetentionBranchProperty to work
-        // TODO same goes for comparing SCM if url updates should work
         return super.decorate(project);
+    }
+
+    /**
+     * This is a mirror of {@link hudson.model.AbstractItem#updateByXml(Source)} without the
+     * {@link hudson.model.listeners.SaveableListener#fireOnChange(Saveable, XmlFile)} trigger.
+     *
+     * @param project project to update by XML
+     * @param source  source of XML
+     * @throws IOException if error performing update
+     */
+    @SuppressWarnings("ThrowFromFinallyBlock")
+    private void updateByXml(final P project, Source source) throws IOException {
+        project.checkPermission(Item.CONFIGURE);
+        XmlFile configXmlFile = project.getConfigFile();
+        final AtomicFileWriter out = new AtomicFileWriter(configXmlFile.getFile());
+        try {
+            try {
+                XMLUtils.safeTransform(source, new StreamResult(out));
+                out.close();
+            } catch (SAXException | TransformerException e) {
+                throw new IOException("Failed to persist config.xml", e);
+            }
+
+            // try to reflect the changes by reloading
+            Object o = new XmlFile(Items.XSTREAM, out.getTemporaryFile()).unmarshal(project);
+            if (o != project) {
+                // ensure that we've got the same job type. extending this code to support updating
+                // to different job type requires destroying & creating a new job type
+                throw new IOException("Expecting " + project.getClass() + " but got " + o.getClass() + " instead");
+            }
+
+            Items.whileUpdatingByXml(new NotReallyRoleSensitiveCallable<Void, IOException>() {
+                @SuppressWarnings("unchecked")
+                @Override
+                public Void call() throws IOException {
+                    project.onLoad(project.getParent(), project.getRootDir().getName());
+                    return null;
+                }
+            });
+            Jenkins.getActiveInstance().rebuildDependencyGraphAsync();
+
+            // if everything went well, commit this new version
+            out.commit();
+        } finally {
+            out.abort();
+        }
     }
 }
