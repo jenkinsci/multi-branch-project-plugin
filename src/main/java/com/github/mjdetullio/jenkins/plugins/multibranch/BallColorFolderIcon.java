@@ -134,7 +134,7 @@ public final class BallColorFolderIcon extends FolderIcon {
          */
         @Override
         public String getDisplayName() {
-            return "Aggregate Ball Color Status Icon";
+            return "Aggregate Ball Color Status Icon (All Jobs)";
         }
     }
 }
