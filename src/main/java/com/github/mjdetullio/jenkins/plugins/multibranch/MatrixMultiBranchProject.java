@@ -82,13 +82,6 @@ public final class MatrixMultiBranchProject extends TemplateDrivenMultiBranchPro
     }
 
     /**
-     * {@inheritDoc}
-     */
-    protected Class<MatrixBuild> getBuildClass() {
-        return MatrixBuild.class;
-    }
-
-    /**
      * {@link MatrixMultiBranchProject}'s descriptor.
      */
     @Extension(optional = true)
