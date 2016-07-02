@@ -107,7 +107,10 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
     private transient SCMSource scmSource; // NOSONAR
 
     /**
-     * {@inheritDoc}
+     * Constructor, mandated by {@link TopLevelItem}.
+     *
+     * @param parent the parent of this multi-branch job.
+     * @param name   the name of the multi-branch job.
      */
     public TemplateDrivenMultiBranchProject(ItemGroup parent, String name) {
         super(parent, name);
