@@ -1,7 +1,8 @@
 <!--
 The MIT License
 
-Copyright (c) 2015, Matthew DeTullio
+Copyright (c) 2004-2016, Sun Microsystems, Inc., Kohsuke Kawaguchi,
+Stephen Connolly, Yahoo!, Inc., Matthew DeTullio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +30,33 @@ THE SOFTWARE.
     <j:set var="descriptor" value="${it.descriptor}"/>
     <j:set var="instance" value="${it}"/>
 
+    <f:section title="${%Project Options and Properties}">
+        <!-- job property configurations. This should have been <f:descriptorList> -->
+        <f:descriptorList field="properties"
+                          descriptors="${h.getJobPropertyDescriptors(it.getClass())}"
+                          forceRowSet="true"/>
+
+        <p:config-concurrentBuild/>
+    </f:section>
+
+    <f:section title="${%Advanced Project Options}">
+        <f:advanced>
+            <p:config-assignedLabel/>
+            <p:config-quietPeriod/>
+            <p:config-retryCount/>
+            <p:config-blockWhenUpstreamBuilding/>
+            <p:config-blockWhenDownstreamBuilding/>
+            <p:config-customWorkspace />
+            <f:optionalBlock name="hasChildCustomWorkspace" title="${%Use custom child workspace}"
+                             checked="${instance.hasChildCustomWorkspace()}"
+                             help="/help/project-config/custom-workspace.html" inline="true">
+                <f:entry title="${%Child Directory}" field="childCustomWorkspace">
+                    <f:textbox />
+                </f:entry>
+            </f:optionalBlock>
+        </f:advanced>
+    </f:section>
+
     <f:section title="${%Configuration Matrix}">
         <!-- Needed for LabelAxis, but including these from LabelAxis/config.jelly is too late -->
         <l:yui module="treeview" />
@@ -39,7 +67,7 @@ THE SOFTWARE.
         </f:block>
 
         <f:optionalBlock name="hasCombinationFilter" title="${%Combination Filter}" checked="${!empty(it.combinationFilter)}"
-            help="/plugin/matrix-project/help/matrix/combinationfilter.html">
+                         help="/plugin/matrix-project/help/matrix/combinationfilter.html">
             <f:entry title="${%Filter}">
                 <f:textbox name="combinationFilter" value="${it.combinationFilter}" />
             </f:entry>

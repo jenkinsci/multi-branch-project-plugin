@@ -23,6 +23,7 @@
  */
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
+import hudson.BulkChange;
 import hudson.Extension;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
@@ -32,11 +33,18 @@ import jenkins.branch.BranchProjectFactoryDescriptor;
 import jenkins.branch.MultiBranchProject;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * @author Matthew DeTullio
  */
 public final class MatrixBranchProjectFactory
         extends TemplateDrivenBranchProjectFactory<MatrixProject, MatrixBuild> {
+
+    private static final String CLASSNAME = MatrixBranchProjectFactory.class.getName();
+    private static final Logger LOGGER = Logger.getLogger(CLASSNAME);
 
     /**
      * No-op constructor used for data binding.
@@ -66,6 +74,44 @@ public final class MatrixBranchProjectFactory
          * for user to configure item directly and accidentally remove the property.
          */
         return item instanceof MatrixProject;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MatrixProject decorate(MatrixProject project) {
+        if (!isProject(project)) {
+            return project;
+        }
+
+        if (!(getOwner() instanceof MatrixMultiBranchProject)) {
+            throw new IllegalStateException(String.format("%s can only be used with %s.",
+                    MatrixBranchProjectFactory.class.getSimpleName(),
+                    MatrixMultiBranchProject.class.getSimpleName()));
+        }
+
+        MatrixMultiBranchProject owner = (MatrixMultiBranchProject) getOwner();
+
+        BulkChange bc = new BulkChange(project);
+        try {
+            project = super.decorate(project);
+
+            // Workaround for JENKINS-21017
+            if (owner.getTemplate().hasChildCustomWorkspace()) {
+                project.setChildCustomWorkspace(owner.getTemplate().getChildCustomWorkspace());
+            } else {
+                project.setChildCustomWorkspace(null);
+            }
+
+            bc.commit();
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Unable to update project " + project.getName(), e);
+        } finally {
+            bc.abort();
+        }
+
+        return project;
     }
 
     /**
