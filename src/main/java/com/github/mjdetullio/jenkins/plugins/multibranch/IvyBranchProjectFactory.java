@@ -61,8 +61,11 @@ public final class IvyBranchProjectFactory
      */
     @Override
     public boolean isProject(Item item) {
-        return item instanceof IvyModuleSet &&
-                ((IvyModuleSet) item).getProperty(BranchProjectProperty.class) != null;
+        /*
+         * Can't check ((IvyModuleSet) item).getProperty(BranchProjectProperty.class) != null because it is possible
+         * for user to configure item directly and accidentally remove the property.
+         */
+        return item instanceof IvyModuleSet;
     }
 
     /**

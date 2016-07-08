@@ -34,7 +34,9 @@ import hudson.model.TopLevelItem;
 import hudson.util.AtomicFileWriter;
 import jenkins.branch.Branch;
 import jenkins.branch.BranchProjectFactory;
+import jenkins.branch.BranchProperty;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMHead;
 import jenkins.security.NotReallyRoleSensitiveCallable;
 import jenkins.util.xml.XMLUtils;
 import org.xml.sax.SAXException;
@@ -45,6 +47,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,7 +66,23 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
     @Nonnull
     @Override
     public Branch getBranch(@Nonnull P project) {
-        return project.getProperty(BranchProjectProperty.class).getBranch();
+        BranchProjectProperty property = project.getProperty(BranchProjectProperty.class);
+
+        /*
+         * Ugly hackish stuff, in the event that the user configures a branch project directly, thereby removing the
+         * BranchProjectProperty.  The property must exist and we can't bash the @Nonnull return value restriction!
+         *
+         * Fudge some generic Branch with the expectation that indexing will soon reset the Branch with proper values,
+         * or that it will be converted to Branch.Dead and the guessed values for sourceId and properties won't matter.
+         */
+        if (property == null) {
+            Branch branch = new Branch("unknown", new SCMHead(project.getDisplayName()), project.getScm(),
+                    Collections.<BranchProperty>emptyList());
+            setBranch(project, branch);
+            return branch;
+        }
+
+        return property.getBranch();
     }
 
     /**
