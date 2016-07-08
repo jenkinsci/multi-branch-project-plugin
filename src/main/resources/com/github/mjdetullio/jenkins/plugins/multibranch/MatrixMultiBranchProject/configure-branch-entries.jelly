@@ -29,6 +29,17 @@ THE SOFTWARE.
     <j:set var="descriptor" value="${it.descriptor}"/>
     <j:set var="instance" value="${it}"/>
 
+    <f:advanced>
+      <p:config-customWorkspace />
+      <f:optionalBlock name="hasChildCustomWorkspace" title="${%Use custom child workspace}"
+                       checked="${instance.hasChildCustomWorkspace()}"
+                       help="/help/project-config/custom-workspace.html" inline="true">
+        <f:entry title="${%Child Directory}" field="childCustomWorkspace">
+          <f:textbox />
+        </f:entry>
+      </f:optionalBlock>
+    </f:advanced>
+
     <f:section title="${%Configuration Matrix}">
         <!-- Needed for LabelAxis, but including these from LabelAxis/config.jelly is too late -->
         <l:yui module="treeview" />
