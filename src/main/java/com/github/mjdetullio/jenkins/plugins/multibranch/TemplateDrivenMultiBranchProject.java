@@ -723,7 +723,8 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
             }
 
             // Don't descend into dirs that we know will be expensive
-            if (file.getName().equals("archive") || file.getName().equals("builds")) {
+            if (file.getName().equals("archive") || file.getName().equals("builds")
+                    || file.getName().startsWith("workspace")) {
                 continue;
             }
 
