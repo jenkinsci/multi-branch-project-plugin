@@ -92,7 +92,7 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
     }
 
     /**
-     * Decorates projects by using {@link hudson.model.AbstractItem#updateByXml(Source)} and saving the configuration,
+     * Decorates projects by using {@link #updateByXml(P, Source)} and saving the configuration,
      * rather than only updating the project in memory.
      *
      * @param project the project to decorate
@@ -133,6 +133,8 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
                 project.enable();
             }
 
+            project = super.decorate(project);
+
             bc.commit();
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to update project " + project.getName(), e);
@@ -140,7 +142,7 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
             bc.abort();
         }
 
-        return super.decorate(project);
+        return project;
     }
 
     /**
