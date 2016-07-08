@@ -132,6 +132,28 @@ public final class IvyMultiBranchProject extends TemplateDrivenMultiBranchProjec
         }
 
         /**
+         * Sets the description of this item type.
+         *
+         * TODO: Override when the baseline is upgraded to 2.x
+         *
+         * @return A string with the Item description.
+         */
+        public String getDescription() {
+            return Messages.IvyMultiBranchProject_Description();
+        }
+
+        /**
+         * Needed to define image for new item in Jenkins 2.x.
+         *
+         * TODO: Override when the baseline is upgraded to 2.x
+         *
+         * @return A string that represents a URL pattern to get the Item icon in different sizes.
+         */
+        public String getIconFilePathPattern() {
+            return "plugin/multi-branch-project-plugin/images/:size/ivymultibranchproject.png";
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
