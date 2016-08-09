@@ -712,7 +712,7 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
     private static List<File> getConfigFiles(File dir) throws IOException {
         List<File> files = new ArrayList<>();
 
-        File[] contents = dir.listFiles();
+        File[] contents = dir.getCanonicalPath().listFiles();
         if (null == contents) {
             throw new IOException("Tried to treat '" + dir + "' as a directory, but could not get a listing");
         }
