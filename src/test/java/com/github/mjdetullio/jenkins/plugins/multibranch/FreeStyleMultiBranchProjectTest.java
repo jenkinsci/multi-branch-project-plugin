@@ -25,11 +25,11 @@ package com.github.mjdetullio.jenkins.plugins.multibranch;
 
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
+import hudson.model.Result;
 import hudson.model.TopLevelItem;
 import hudson.security.ACL;
 import java.util.Collection;
 import java.util.Collections;
-import jenkins.branch.Branch;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMEvents;
@@ -39,6 +39,7 @@ import jenkins.scm.impl.mock.MockSCMController;
 import jenkins.scm.impl.mock.MockSCMHeadEvent;
 import jenkins.scm.impl.mock.MockSCMSource;
 import jenkins.scm.impl.mock.MockSCMSourceEvent;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -84,6 +85,27 @@ public class FreeStyleMultiBranchProjectTest {
             prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
             prj.scheduleBuild2(0).getFuture().get();
             r.waitUntilNoActivity();
+            assertThat("We now have branches",
+                    prj.getItems(), not(is((Collection<FreeStyleProject>) Collections.<FreeStyleProject>emptyList())));
+            FreeStyleProject master = prj.getItem("master");
+            assertThat("We now have the master branch", master, notNullValue());
+            r.waitUntilNoActivity();
+            assertThat("The master branch was built", master.getLastBuild(), notNullValue());
+            assertThat("The master branch was built", master.getLastBuild().getNumber(), is(1));
+        }
+    }
+
+    @Test
+    public void given_multibranchWithSources_when_indexingWithFancyNames_then_branchesAreFoundAndBuilt() throws Exception {
+        try (MockSCMController c = MockSCMController.create()) {
+            c.createRepository("foo");
+            c.cloneBranch("foo", "master", "feature/jenkins-41867");
+            FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.scheduleBuild2(0).getFuture().get();
+            r.waitUntilNoActivity();
+            System.out.println(FileUtils.readFileToString(prj.getIndexing().getLogFile()));
+            assertThat(prj.getIndexing().getResult(), is(Result.SUCCESS));
             assertThat("We now have branches",
                     prj.getItems(), not(is((Collection<FreeStyleProject>) Collections.<FreeStyleProject>emptyList())));
             FreeStyleProject master = prj.getItem("master");
