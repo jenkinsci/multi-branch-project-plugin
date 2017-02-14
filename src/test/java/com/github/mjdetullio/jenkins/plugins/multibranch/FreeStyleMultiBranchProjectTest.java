@@ -168,7 +168,7 @@ public class FreeStyleMultiBranchProjectTest {
             assertThat("We now have the master branch", master, notNullValue());
             r.waitUntilNoActivity();
             assertThat("The master branch was built", master.getLastBuild(), notNullValue());
-            assertThat(master.getACL().hasPermission(ACL.SYSTEM, Item.BUILD), is(true));
+            assertThat(master.isBuildable(), is(true));
         }
     }
 
@@ -187,38 +187,12 @@ public class FreeStyleMultiBranchProjectTest {
             assertThat("We now have the master branch", master, notNullValue());
             r.waitUntilNoActivity();
             assertThat("The master branch was built", master.getLastBuild(), notNullValue());
-            assumeThat(master.getACL().hasPermission(ACL.SYSTEM, Item.BUILD), is(true));
+            assumeThat(master.isBuildable(), is(true));
             c.deleteBranch("foo", "master");
             fire(new MockSCMHeadEvent(
                     "given_multibranchWithSources_when_branchRemoved_then_branchProjectIsNotBuildable",
                     SCMEvent.Type.REMOVED, c, "foo", "master", "junkHash"));
             r.waitUntilNoActivity();
-            assertThat(master.getACL().hasPermission(ACL.SYSTEM, Item.BUILD), is(false));
-        }
-    }
-
-    @Test
-    @Ignore("Currently failing to honour contract of multi-branch projects with respect to dead branches")
-    public void given_multibranchWithSources_when_branchRemoved_then_branchProjectIsNotBuildable() throws Exception {
-        try (MockSCMController c = MockSCMController.create()) {
-            c.createRepository("foo");
-            FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
-            prj.scheduleBuild2(0).getFuture().get();
-            r.waitUntilNoActivity();
-            assertThat("We now have branches",
-                    prj.getItems(), not(is((Collection<FreeStyleProject>) Collections.<FreeStyleProject>emptyList())));
-            FreeStyleProject master = prj.getItem("master");
-            assertThat("We now have the master branch", master, notNullValue());
-            r.waitUntilNoActivity();
-            assertThat("The master branch was built", master.getLastBuild(), notNullValue());
-            assertThat("The master branch was built", master.getLastBuild().getNumber(), is(1));
-            c.deleteBranch("foo", "master");
-            fire(new MockSCMHeadEvent("given_multibranchWithSources_when_branchRemoved_then_branchProjectIsNotBuildable",
-                    SCMEvent.Type.REMOVED, c, "foo", "master", "junkHash"));
-            r.waitUntilNoActivity();
-            assertThat(prj.getProjectFactory().isProject(master), is(true));
-            assertThat(prj.getProjectFactory().getBranch(master), instanceOf(Branch.Dead.class));
             assertThat(master.isBuildable(), is(false));
         }
     }
