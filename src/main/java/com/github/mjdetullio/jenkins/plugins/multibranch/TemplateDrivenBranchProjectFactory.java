@@ -175,6 +175,7 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
     @SuppressWarnings("ThrowFromFinallyBlock")
     private void updateByXml(final P project, Source source) throws IOException {
         project.checkPermission(Item.CONFIGURE);
+        final String projectName = project.getName();
         XmlFile configXmlFile = project.getConfigFile();
         final AtomicFileWriter out = new AtomicFileWriter(configXmlFile.getFile());
         try {
@@ -197,7 +198,7 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
                 @SuppressWarnings("unchecked")
                 @Override
                 public Void call() throws IOException {
-                    project.onLoad(project.getParent(), project.getRootDir().getName());
+                    project.onLoad(project.getParent(), projectName);
                     return null;
                 }
             });

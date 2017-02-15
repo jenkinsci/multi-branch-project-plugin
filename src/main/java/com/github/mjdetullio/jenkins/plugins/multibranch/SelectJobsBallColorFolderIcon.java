@@ -63,6 +63,8 @@ public final class SelectJobsBallColorFolderIcon extends FolderIcon {
 
     /**
      * No-op constructor used only for data binding.
+     *
+     * @param jobs the jobs.
      */
     @SuppressWarnings(UNUSED)
     @DataBoundConstructor
