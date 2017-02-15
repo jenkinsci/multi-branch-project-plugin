@@ -712,8 +712,12 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
     private static List<File> getConfigFiles(File dir) throws IOException {
         List<File> files = new ArrayList<>();
 
-        File[] contents = dir.listFiles();
-        if (null == contents) {
+        File[] contents = dir.getCanonicalFile().listFiles();
+        /**
+         * Directory could be a symlink and this is a problem. getCanonicalFile() does not properly handle this for
+         * Windows (see https://bugs.openjdk.java.net/browse/JDK-8022671). The workaround is to use toRealPath().
+         */
+        if (contents == null && (contents = dir.toPath().toRealPath().toFile().listFiles())==null) {
             throw new IOException("Tried to treat '" + dir + "' as a directory, but could not get a listing");
         }
 

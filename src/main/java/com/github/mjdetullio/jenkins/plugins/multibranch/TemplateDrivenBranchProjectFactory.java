@@ -111,7 +111,7 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
     }
 
     /**
-     * Decorates projects by using {@link #updateByXml(P, Source)} and saving the configuration,
+     * Decorates projects by using {@link #updateByXml(AbstractProject, Source)} and saving the configuration,
      * rather than only updating the project in memory.
      *
      * @param project the project to decorate
