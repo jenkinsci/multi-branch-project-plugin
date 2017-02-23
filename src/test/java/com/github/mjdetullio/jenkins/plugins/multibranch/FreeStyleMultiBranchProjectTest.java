@@ -34,11 +34,9 @@ import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMEvents;
 import jenkins.scm.api.SCMHeadEvent;
-import jenkins.scm.api.SCMSourceEvent;
 import jenkins.scm.impl.mock.MockSCMController;
 import jenkins.scm.impl.mock.MockSCMHeadEvent;
 import jenkins.scm.impl.mock.MockSCMSource;
-import jenkins.scm.impl.mock.MockSCMSourceEvent;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -225,12 +223,4 @@ public class FreeStyleMultiBranchProjectTest {
         SCMEvents.awaitAll(watermark);
         r.waitUntilNoActivity();
     }
-
-    private void fire(MockSCMSourceEvent event) throws Exception {
-        long watermark = SCMEvents.getWatermark();
-        SCMSourceEvent.fireNow(event);
-        SCMEvents.awaitAll(watermark);
-        r.waitUntilNoActivity();
-    }
-
 }

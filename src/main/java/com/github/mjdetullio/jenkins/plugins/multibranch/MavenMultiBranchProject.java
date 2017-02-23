@@ -57,26 +57,17 @@ public final class MavenMultiBranchProject
         super(parent, name);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected MavenModuleSet newTemplate() {
         return new MavenModuleSet(this, TemplateDrivenMultiBranchProject.TEMPLATE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     protected BranchProjectFactory<MavenModuleSet, MavenModuleSetBuild> newProjectFactory() {
         return new MavenBranchProjectFactory();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     public MultiBranchProjectDescriptor getDescriptor() {
@@ -101,9 +92,7 @@ public final class MavenMultiBranchProject
      */
     @Extension(optional = true)
     public static class DescriptorImpl extends MultiBranchProjectDescriptor {
-        /**
-         * {@inheritDoc}
-         */
+        @Nonnull
         @Override
         public String getDisplayName() {
             return Messages.MavenMultiBranchProject_DisplayName();
@@ -131,9 +120,6 @@ public final class MavenMultiBranchProject
             return "plugin/multi-branch-project-plugin/images/:size/mavenmultibranchproject.png";
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public TopLevelItem newInstance(ItemGroup parent, String name) {
             return new MavenMultiBranchProject(parent, name);

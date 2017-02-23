@@ -60,9 +60,6 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
     private static final String CLASSNAME = TemplateDrivenBranchProjectFactory.class.getName();
     private static final Logger LOGGER = Logger.getLogger(CLASSNAME);
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     public Branch getBranch(@Nonnull P project) {
@@ -85,9 +82,6 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
         return property.getBranch();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     public P setBranch(@Nonnull P project, @Nonnull Branch branch) {

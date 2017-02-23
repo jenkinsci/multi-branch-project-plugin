@@ -117,9 +117,6 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
         init3();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void onLoad(ItemGroup<? extends Item> parent, String name) throws IOException {
         super.onLoad(parent, name);
@@ -292,9 +289,6 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
         return new File(getRootDir(), TEMPLATE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     public File getRootDirFor(P child) {
@@ -499,9 +493,6 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
         return run1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isBuildable() {
         return !isDisabled() && super.isBuildable();
@@ -703,21 +694,20 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
     }
 
     /**
-     * Populate a list of config files
-     * (Avoid traversing down into directories that may be expensive to stat)
-     * @param dir the directory to traverse
+     * Populate a list of config files.  Avoid traversing down into directories that may be expensive to stat.
      *
-     * @throws IOException
+     * @param dir the directory to traverse
+     * @throws IOException if no directory listing was retrieved at a symlink expected to be a directory
      */
     private static List<File> getConfigFiles(File dir) throws IOException {
         List<File> files = new ArrayList<>();
 
         File[] contents = dir.getCanonicalFile().listFiles();
-        /**
+        /*
          * Directory could be a symlink and this is a problem. getCanonicalFile() does not properly handle this for
          * Windows (see https://bugs.openjdk.java.net/browse/JDK-8022671). The workaround is to use toRealPath().
          */
-        if (contents == null && (contents = dir.toPath().toRealPath().toFile().listFiles())==null) {
+        if (contents == null && (contents = dir.toPath().toRealPath().toFile().listFiles()) == null) {
             throw new IOException("Tried to treat '" + dir + "' as a directory, but could not get a listing");
         }
 

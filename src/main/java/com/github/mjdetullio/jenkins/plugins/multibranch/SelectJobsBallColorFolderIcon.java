@@ -62,7 +62,7 @@ public final class SelectJobsBallColorFolderIcon extends FolderIcon {
     private String jobs;
 
     /**
-     * No-op constructor used only for data binding.
+     * Constructor used only for data binding.
      *
      * @param jobs the jobs.
      */
@@ -81,9 +81,6 @@ public final class SelectJobsBallColorFolderIcon extends FolderIcon {
         return jobs;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setOwner(AbstractFolder<?> folder) {
         this.owner = folder;
@@ -161,9 +158,7 @@ public final class SelectJobsBallColorFolderIcon extends FolderIcon {
     @SuppressWarnings(UNUSED)
     @Extension
     public static class DescriptorImpl extends FolderIconDescriptor {
-        /**
-         * {@inheritDoc}
-         */
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "Aggregate Ball Color Status Icon (Select Jobs)";

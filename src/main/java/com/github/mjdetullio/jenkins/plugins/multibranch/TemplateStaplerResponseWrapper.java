@@ -29,7 +29,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.annotation.Nonnull;
-import javax.servlet.ServletException;
 import java.io.IOException;
 
 /**
@@ -45,9 +44,8 @@ public final class TemplateStaplerResponseWrapper extends ResponseImpl {
      *
      * @param stapler the Stapler instance, which you can get from {@link StaplerRequest#getStapler()}
      * @param response the response you want to wrap
-     * @throws ServletException
      */
-    /*package*/ TemplateStaplerResponseWrapper(Stapler stapler, StaplerResponse response) throws ServletException {
+    TemplateStaplerResponseWrapper(Stapler stapler, StaplerResponse response) {
         super(stapler, response);
     }
 

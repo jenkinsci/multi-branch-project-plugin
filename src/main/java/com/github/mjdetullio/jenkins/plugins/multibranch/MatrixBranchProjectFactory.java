@@ -33,6 +33,7 @@ import jenkins.branch.BranchProjectFactoryDescriptor;
 import jenkins.branch.MultiBranchProject;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,9 +55,6 @@ public final class MatrixBranchProjectFactory
         // No-op
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public MatrixProject newInstance(Branch branch) {
         MatrixProject project = new MatrixProject(getOwner(), branch.getEncodedName());
@@ -64,9 +62,6 @@ public final class MatrixBranchProjectFactory
         return project;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isProject(Item item) {
         /*
@@ -76,9 +71,6 @@ public final class MatrixBranchProjectFactory
         return item instanceof MatrixProject;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public MatrixProject decorate(MatrixProject project) {
         if (!isProject(project)) {
@@ -120,6 +112,7 @@ public final class MatrixBranchProjectFactory
     @SuppressWarnings("unused")
     @Extension(optional = true)
     public static class DescriptorImpl extends BranchProjectFactoryDescriptor {
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "Fixed configuration";

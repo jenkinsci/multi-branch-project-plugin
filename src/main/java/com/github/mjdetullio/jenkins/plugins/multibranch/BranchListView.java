@@ -106,9 +106,6 @@ public class BranchListView extends ListView {
      */
     @Extension
     public static class DescriptorImpl extends ListView.DescriptorImpl {
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public boolean isInstantiable() {
             return false;

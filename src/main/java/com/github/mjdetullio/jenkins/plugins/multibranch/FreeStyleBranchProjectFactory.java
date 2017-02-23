@@ -32,6 +32,8 @@ import jenkins.branch.BranchProjectFactoryDescriptor;
 import jenkins.branch.MultiBranchProject;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author Matthew DeTullio
  */
@@ -46,9 +48,6 @@ public final class FreeStyleBranchProjectFactory
         // No-op
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public FreeStyleProject newInstance(Branch branch) {
         FreeStyleProject project = new FreeStyleProject(getOwner(), branch.getEncodedName());
@@ -56,9 +55,6 @@ public final class FreeStyleBranchProjectFactory
         return project;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isProject(Item item) {
         /*
@@ -74,6 +70,7 @@ public final class FreeStyleBranchProjectFactory
     @SuppressWarnings("unused")
     @Extension
     public static class DescriptorImpl extends BranchProjectFactoryDescriptor {
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "Fixed configuration";

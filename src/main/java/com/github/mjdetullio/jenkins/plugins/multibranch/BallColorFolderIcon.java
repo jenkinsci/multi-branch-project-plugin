@@ -54,9 +54,6 @@ public final class BallColorFolderIcon extends FolderIcon {
         // No-op
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setOwner(AbstractFolder<?> folder) {
         this.owner = folder;
@@ -129,9 +126,7 @@ public final class BallColorFolderIcon extends FolderIcon {
     @SuppressWarnings(UNUSED)
     @Extension
     public static class DescriptorImpl extends FolderIconDescriptor {
-        /**
-         * {@inheritDoc}
-         */
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "Aggregate Ball Color Status Icon (All Jobs)";

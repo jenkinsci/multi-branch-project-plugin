@@ -55,26 +55,17 @@ public final class MatrixMultiBranchProject extends TemplateDrivenMultiBranchPro
         super(parent, name);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected MatrixProject newTemplate() {
         return new MatrixProject(this, TemplateDrivenMultiBranchProject.TEMPLATE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     protected BranchProjectFactory<MatrixProject, MatrixBuild> newProjectFactory() {
         return new MatrixBranchProjectFactory();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     public MultiBranchProjectDescriptor getDescriptor() {
@@ -86,9 +77,7 @@ public final class MatrixMultiBranchProject extends TemplateDrivenMultiBranchPro
      */
     @Extension(optional = true)
     public static class DescriptorImpl extends MultiBranchProjectDescriptor {
-        /**
-         * {@inheritDoc}
-         */
+        @Nonnull
         @Override
         public String getDisplayName() {
             return Messages.MatrixMultiBranchProject_DisplayName();
@@ -116,9 +105,6 @@ public final class MatrixMultiBranchProject extends TemplateDrivenMultiBranchPro
             return "plugin/multi-branch-project-plugin/images/:size/matrixmultibranchproject.png";
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public TopLevelItem newInstance(ItemGroup parent, String name) {
             return new MatrixMultiBranchProject(parent, name);

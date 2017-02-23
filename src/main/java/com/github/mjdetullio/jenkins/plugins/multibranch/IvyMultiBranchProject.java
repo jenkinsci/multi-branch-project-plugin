@@ -59,26 +59,17 @@ public final class IvyMultiBranchProject extends TemplateDrivenMultiBranchProjec
         super(parent, name);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected IvyModuleSet newTemplate() {
         return new IvyModuleSet(this, TemplateDrivenMultiBranchProject.TEMPLATE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     protected BranchProjectFactory<IvyModuleSet, IvyModuleSetBuild> newProjectFactory() {
         return new IvyBranchProjectFactory();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     public MultiBranchProjectDescriptor getDescriptor() {
@@ -123,9 +114,7 @@ public final class IvyMultiBranchProject extends TemplateDrivenMultiBranchProjec
      */
     @Extension(optional = true)
     public static class DescriptorImpl extends MultiBranchProjectDescriptor {
-        /**
-         * {@inheritDoc}
-         */
+        @Nonnull
         @Override
         public String getDisplayName() {
             return Messages.IvyMultiBranchProject_DisplayName();

@@ -47,9 +47,8 @@ public final class TemplateStaplerRequestWrapper extends RequestImpl {
      * underlying type of the {@link StaplerRequest}.
      *
      * @param request the request submitted the {@link TemplateDrivenMultiBranchProject}
-     * @throws ServletException if errors
      */
-    /*package*/ TemplateStaplerRequestWrapper(StaplerRequest request) throws ServletException {
+    TemplateStaplerRequestWrapper(StaplerRequest request) {
         /*
          * Ugly casts to RequestImpl... but should be ok since it will throw
          * errors, which we want anyway if it's not that type.

@@ -78,6 +78,7 @@ public class BranchProjectProperty<P extends AbstractProject<P, B> & TopLevelIte
     @SuppressWarnings("unused")
     @Extension
     public static class DescriptorImpl extends JobPropertyDescriptor {
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "Branch";

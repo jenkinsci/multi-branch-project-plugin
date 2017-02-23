@@ -53,26 +53,17 @@ public final class FreeStyleMultiBranchProject
         super(parent, name);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected FreeStyleProject newTemplate() {
         return new FreeStyleProject(this, TemplateDrivenMultiBranchProject.TEMPLATE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     protected BranchProjectFactory<FreeStyleProject, FreeStyleBuild> newProjectFactory() {
         return new FreeStyleBranchProjectFactory();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     public MultiBranchProjectDescriptor getDescriptor() {
@@ -84,9 +75,7 @@ public final class FreeStyleMultiBranchProject
      */
     @Extension
     public static class DescriptorImpl extends MultiBranchProjectDescriptor {
-        /**
-         * {@inheritDoc}
-         */
+        @Nonnull
         @Override
         public String getDisplayName() {
             return Messages.FreeStyleMultiBranchProject_DisplayName();
@@ -114,9 +103,6 @@ public final class FreeStyleMultiBranchProject
             return "plugin/multi-branch-project-plugin/images/:size/freestylemultibranchproject.png";
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public TopLevelItem newInstance(ItemGroup parent, String name) {
             return new FreeStyleMultiBranchProject(parent, name);
