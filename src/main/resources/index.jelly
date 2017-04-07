@@ -1,6 +1,6 @@
 <?jelly escape-by-default='true'?>
 <div>
-    This plugin adds additional project types that create sub-projects for each branch using a shared configuration.
+    This plugin is deprecated.  Please move to the <a href="https://plugins.jenkins.io/workflow-multibranch">Multibranch Pipeline</a> job type.
     <br/><br/>
     Important: Read the <a href="https://wiki.jenkins-ci.org/display/JENKINS/Multi-Branch+Project+Plugin#Multi-BranchProjectPlugin-UpgradeNotes">upgrade notes</a>
     before proceeding with any upgrade! Migration from versions prior to 0.5.x are not supported.

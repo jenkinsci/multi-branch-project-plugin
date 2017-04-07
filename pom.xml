@@ -12,10 +12,9 @@
         <version>2.21</version>
     </parent>
 
-    <name>Multi-Branch Project Plugin</name>
+    <name>Multi-Branch Project Plugin (DEPRECATED)</name>
     <description>
-        This plugin adds additional project types that create sub-projects
-        for each branch using a shared configuration.
+        This plugin is deprecated.  Please move to the Multibranch Pipeline job type.
     </description>
     <url>https://wiki.jenkins-ci.org/display/JENKINS/Multi-Branch+Project+Plugin</url>
 
