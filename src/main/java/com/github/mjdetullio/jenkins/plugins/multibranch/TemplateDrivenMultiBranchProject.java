@@ -24,11 +24,8 @@
 package com.github.mjdetullio.jenkins.plugins.multibranch;
 
 import hudson.Extension;
-import hudson.Util;
 import hudson.XmlFile;
 import hudson.cli.declarative.CLIMethod;
-import hudson.init.InitMilestone;
-import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
@@ -47,19 +44,9 @@ import hudson.model.listeners.SaveableListener;
 import hudson.scm.NullSCM;
 import hudson.util.AlternativeUiTextProvider;
 import hudson.util.PersistedList;
-import jenkins.branch.Branch;
-import jenkins.branch.BranchProjectFactory;
-import jenkins.branch.BranchProperty;
-import jenkins.branch.BranchPropertyStrategy;
-import jenkins.branch.BranchSource;
-import jenkins.branch.BuildRetentionBranchProperty;
-import jenkins.branch.DefaultBranchPropertyStrategy;
 import jenkins.branch.MultiBranchProject;
 import jenkins.model.Jenkins;
-import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
-import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
@@ -74,12 +61,9 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -103,9 +87,6 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
 
     protected transient P template; // NOSONAR
 
-    // Used for migration only
-    private transient SCMSource scmSource; // NOSONAR
-
     /**
      * Constructor, mandated by {@link TopLevelItem}.
      *
@@ -121,9 +102,6 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
     public void onLoad(ItemGroup<? extends Item> parent, String name) throws IOException {
         super.onLoad(parent, name);
         init3();
-        runSubProjectDisplayNameMigration();
-        runDisabledSubProjectNameMigration();
-        migrateToBranchApi();
     }
 
     /**
@@ -188,85 +166,6 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
         v.setIncludeRegex(".*");
         views.add(v);
         v.save();
-    }
-
-    private void runSubProjectDisplayNameMigration() {
-        for (P project : getItems()) {
-            String projectName = project.getName();
-            String projectNameDecoded = rawDecode(projectName);
-
-            if (!projectName.equals(projectNameDecoded)
-                    && project.getDisplayNameOrNull() == null) {
-                try {
-                    project.setDisplayName(projectNameDecoded);
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failed to update display name for project " + projectName, e);
-                }
-            }
-        }
-    }
-
-    private void runDisabledSubProjectNameMigration() throws IOException {
-        /*
-         * PersistedList/CopyOnWriteArray's iterator does not support iter.remove() so we can't modify
-         * the list while iterating.  Instead, build a new list and replace the old one with it.
-         */
-        Set<String> newDisabledSubProjects = new HashSet<>();
-
-        for (String disabledSubProject : disabledSubProjects) {
-            if (getItem(disabledSubProject) == null) {
-                // Didn't find item, so don't add it to new list
-                // Do we have the encoded item though?
-                String encoded = Util.rawEncode(disabledSubProject);
-
-                if (getItem(encoded) != null) {
-                    // Found encoded item, add encoded name to new list
-                    newDisabledSubProjects.add(encoded);
-                }
-            } else {
-                // Found item, add to new list
-                newDisabledSubProjects.add(disabledSubProject);
-            }
-        }
-
-        disabledSubProjects.clear();
-        disabledSubProjects.addAll(newDisabledSubProjects);
-    }
-
-    private void migrateToBranchApi() {
-        if (scmSource == null) {
-            // Already migrated
-            return;
-        }
-
-        BranchProjectFactory<P, B> factory = getProjectFactory();
-
-        for (P project : getItems()) {
-            BranchProjectProperty property = project.getProperty(BranchProjectProperty.class);
-
-            if (property == null) {
-                Branch branch = new Branch(scmSource.getId(), new SCMHead(project.getDisplayName()), project.getScm(),
-                        Collections.<BranchProperty>emptyList());
-
-                factory.setBranch(project, branch);
-            }
-        }
-
-        BranchSource branchSource = new BranchSource(scmSource);
-
-        if (template.getBuildDiscarder() != null) {
-            BuildRetentionBranchProperty property = new BuildRetentionBranchProperty(template.getBuildDiscarder());
-            BranchPropertyStrategy strategy = new DefaultBranchPropertyStrategy(new BranchProperty[]{property});
-            branchSource.setStrategy(strategy);
-            try {
-                template.setBuildDiscarder(null);
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Failed to migrate build discarder for project " + getFullDisplayName(), e);
-            }
-        }
-
-        getSourcesList().add(branchSource);
-        scmSource = null;
     }
 
     /**
@@ -690,109 +589,6 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
             if (o instanceof Item) {
                 enforceProjectStateOnUpdated((Item) o);
             }
-        }
-    }
-
-    /**
-     * Populate a list of config files.  Avoid traversing down into directories that may be expensive to stat.
-     *
-     * @param dir the directory to traverse
-     * @throws IOException if no directory listing was retrieved at a symlink expected to be a directory
-     */
-    private static List<File> getConfigFiles(File dir) throws IOException {
-        List<File> files = new ArrayList<>();
-
-        File[] contents = dir.getCanonicalFile().listFiles();
-        /*
-         * Directory could be a symlink and this is a problem. getCanonicalFile() does not properly handle this for
-         * Windows (see https://bugs.openjdk.java.net/browse/JDK-8022671). The workaround is to use toRealPath().
-         */
-        if (contents == null && (contents = dir.toPath().toRealPath().toFile().listFiles()) == null) {
-            throw new IOException("Tried to treat '" + dir + "' as a directory, but could not get a listing");
-        }
-
-        for (final File file : contents) {
-            if (file.getName().equals("config.xml")) {
-                files.add(file);
-            }
-
-            // Don't descend into dirs that we know will be expensive
-            if (file.getName().equals("archive") || file.getName().equals("builds")
-                    || file.getName().startsWith("workspace")) {
-                continue;
-            }
-
-            if (file.isDirectory()) {
-                files.addAll(getConfigFiles(file));
-            }
-        }
-
-        return files;
-    }
-
-
-    /**
-     * Migrates {@code SyncBranchesTrigger} to {@link hudson.triggers.TimerTrigger} and copies the
-     * template's {@code hudson.security.AuthorizationMatrixProperty} to the parent as a
-     * {@code com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty}.
-     *
-     * @throws IOException if errors reading/modifying files during migration
-     */
-    @SuppressWarnings(UNUSED)
-    @Initializer(before = InitMilestone.PLUGINS_STARTED)
-    public static void migrate() throws IOException {
-        final String projectAmpStartTag = "<hudson.security.AuthorizationMatrixProperty>";
-
-        final File projectsDir = new File(Jenkins.getActiveInstance().getRootDir(), "jobs");
-
-        if (!projectsDir.getCanonicalFile().isDirectory()) {
-            return;
-        }
-
-        List<File> configFiles = getConfigFiles(projectsDir);
-
-        for (final File configFile : configFiles) {
-            String xml = FileUtils.readFileToString(configFile);
-
-            // Rename and wrap trigger open tag
-            xml = xml.replaceFirst(
-                    "(?m)^  <syncBranchesTrigger>(\r?\n)    <spec>",
-                    "  <triggers>\n    <hudson.triggers.TimerTrigger>\n      <spec>");
-
-            // Rename and wrap trigger close tag
-            xml = xml.replaceFirst(
-                    "(?m)^  </syncBranchesTrigger>",
-                    "    </hudson.triggers.TimerTrigger>\n  </triggers>");
-
-            // Copy AMP from template if parent does not have a properties tag
-            if (!xml.matches("(?ms).+(\r?\n)  <properties.+")
-                    // Long line is long
-                    && xml.matches("(?ms).*<((freestyle|maven)-multi-branch-project|com\\.github\\.mjdetullio\\.jenkins\\.plugins\\.multibranch\\.(FreeStyle|Maven)MultiBranchProject)( plugin=\".*?\")?.+")) {
-
-                File templateConfigFile = new File(new File(configFile.getParentFile(), TEMPLATE), "config.xml");
-
-                if (templateConfigFile.isFile()) {
-                    String templateXml = FileUtils.readFileToString(templateConfigFile);
-
-                    int start = templateXml.indexOf(projectAmpStartTag);
-                    int end = templateXml.indexOf("</hudson.security.AuthorizationMatrixProperty>");
-
-                    if (start != -1 && end != -1) {
-                        String ampSettings = templateXml.substring(
-                                start + projectAmpStartTag.length(),
-                                end);
-
-                        xml = xml.replaceFirst("(?m)^  ",
-                                "  <properties>\n    " +
-                                        "<com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty>" +
-                                        ampSettings +
-                                        "</com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty>" +
-                                        "\n  </properties>\n  ");
-                    }
-                }
-            }
-
-            FileUtils.writeStringToFile(configFile, xml);
         }
     }
 }

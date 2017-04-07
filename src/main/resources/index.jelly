@@ -3,6 +3,5 @@
     This plugin adds additional project types that create sub-projects for each branch using a shared configuration.
     <br/><br/>
     Important: Read the <a href="https://wiki.jenkins-ci.org/display/JENKINS/Multi-Branch+Project+Plugin#Multi-BranchProjectPlugin-UpgradeNotes">upgrade notes</a>
-    before proceeding with any upgrade! The stored configurations for these project types have had significant changes
-    leading up to version 0.5.x.
+    before proceeding with any upgrade! Migration from versions prior to 0.5.x are not supported.
 </div>
