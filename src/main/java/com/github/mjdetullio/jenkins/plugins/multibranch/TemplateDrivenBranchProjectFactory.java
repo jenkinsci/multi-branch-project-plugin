@@ -73,6 +73,15 @@ public abstract class TemplateDrivenBranchProjectFactory<P extends AbstractProje
          * or that it will be converted to Branch.Dead and the guessed values for sourceId and properties won't matter.
          */
         if (property == null) {
+            // Don't try to set a branch on the template folder,
+            // otherwise all your history will disappear.
+            // There might be nicer fix, but this works
+            // from JENKINS-42317
+            if ("template".equals(project.getName())) {
+                LOGGER.log(Level.INFO, "Skip branch setting for template " +
+                    project.getFullName());
+                return null;
+            }
             Branch branch = new Branch("unknown", new SCMHead(project.getDisplayName()), project.getScm(),
                     Collections.<BranchProperty>emptyList());
             setBranch(project, branch);
