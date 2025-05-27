@@ -25,8 +25,8 @@ package com.github.mjdetullio.jenkins.plugins.multibranch;
 
 import org.kohsuke.stapler.ResponseImpl;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -40,12 +40,12 @@ import java.io.IOException;
 public final class TemplateStaplerResponseWrapper extends ResponseImpl {
     /**
      * Constructs this extension of {@link ResponseImpl} using the provided {@link Stapler} instance and the
-     * {@link StaplerResponse} you want to wrap.
+     * {@link StaplerResponse2} you want to wrap.
      *
      * @param stapler the Stapler instance, which you can get from {@link StaplerRequest#getStapler()}
      * @param response the response you want to wrap
      */
-    TemplateStaplerResponseWrapper(Stapler stapler, StaplerResponse response) {
+    TemplateStaplerResponseWrapper(Stapler stapler, StaplerResponse2 response) {
         super(stapler, response);
     }
 
