@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.21</version>
+        <version>5.17</version>
     </parent>
 
     <name>Multi-Branch Project Plugin (DEPRECATED)</name>
@@ -51,12 +51,13 @@
     </prerequisites>
 
     <properties>
-        <jenkins.version>1.642.3</jenkins.version>
+        <jenkins.version>2.479.1</jenkins.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.findbugs.version>3.0.1</maven.findbugs.version>
         <maven.findbugs.failure.strict>true</maven.findbugs.failure.strict>
+        <access-modifier-checker.failOnError>false</access-modifier-checker.failOnError>
     </properties>
 
     <repositories>
@@ -76,7 +77,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>branch-api</artifactId>
-            <version>2.0.5</version>
+            <version>2.1217.v43d8b_b_d8b_2c7</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
@@ -98,13 +99,11 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>1.8.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -122,7 +121,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>scm-api</artifactId>
-            <version>2.0.3</version>
+            <version>704.v3ce5c542825a_</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>

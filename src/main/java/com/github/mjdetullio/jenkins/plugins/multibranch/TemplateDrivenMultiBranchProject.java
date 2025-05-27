@@ -32,9 +32,6 @@ import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Items;
-import hudson.model.Job;
-import hudson.model.Result;
-import hudson.model.Run;
 import hudson.model.Saveable;
 import hudson.model.TopLevelItem;
 import hudson.model.View;
@@ -49,14 +46,12 @@ import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMSourceOwner;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.File;
@@ -224,12 +219,12 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
 
     /**
      * Sets various implementation-specific fields and forwards wrapped req/rsp objects on to the
-     * {@link #template}'s {@link AbstractProject#doConfigSubmit(StaplerRequest, StaplerResponse)} method.
+     * {@link #template}'s {@link AbstractProject#doConfigSubmit(StaplerRequest2, StaplerResponse2)} method.
      * <br>
      * {@inheritDoc}
      */
     @Override
-    public void submit(StaplerRequest req, StaplerResponse rsp)
+    public void submit(StaplerRequest2 req, StaplerResponse2 rsp)
             throws ServletException, Descriptor.FormException, IOException {
         super.submit(req, rsp);
 
@@ -248,149 +243,6 @@ public abstract class TemplateDrivenMultiBranchProject<P extends AbstractProject
         Jenkins.getActiveInstance().rebuildDependencyGraphAsync();
     }
 
-    /**
-     * Returns the last build.
-     *
-     * @return the build or null
-     */
-    @SuppressWarnings(UNUSED)
-    @CheckForNull
-    @Exported
-    public Run getLastBuild() {
-        Run retVal = null;
-        for (Job job : getAllJobs()) {
-            retVal = takeLast(retVal, job.getLastBuild());
-        }
-        return retVal;
-    }
-
-    /**
-     * Returns the oldest build in the record.
-     *
-     * @return the build or null
-     */
-    @SuppressWarnings(UNUSED)
-    @CheckForNull
-    @Exported
-    public Run getFirstBuild() {
-        Run retVal = null;
-        for (Job job : getAllJobs()) {
-            Run run = job.getFirstBuild();
-            if (run != null && (retVal == null || run.getTimestamp().before(retVal.getTimestamp()))) {
-                retVal = run;
-            }
-        }
-        return retVal;
-    }
-
-    /**
-     * Returns the last successful build, if any. Otherwise null. A successful build would include
-     * either {@link Result#SUCCESS} or {@link Result#UNSTABLE}.
-     *
-     * @return the build or null
-     * @see #getLastStableBuild()
-     */
-    @SuppressWarnings(UNUSED)
-    @CheckForNull
-    @Exported
-    public Run getLastSuccessfulBuild() {
-        Run retVal = null;
-        for (Job job : getAllJobs()) {
-            retVal = takeLast(retVal, job.getLastSuccessfulBuild());
-        }
-        return retVal;
-    }
-
-    /**
-     * Returns the last build that was anything but stable, if any. Otherwise null.
-     *
-     * @return the build or null
-     * @see #getLastSuccessfulBuild
-     */
-    @SuppressWarnings(UNUSED)
-    @CheckForNull
-    @Exported
-    public Run getLastUnsuccessfulBuild() {
-        Run retVal = null;
-        for (Job job : getAllJobs()) {
-            retVal = takeLast(retVal, job.getLastUnsuccessfulBuild());
-        }
-        return retVal;
-    }
-
-    /**
-     * Returns the last unstable build, if any. Otherwise null.
-     *
-     * @return the build or null
-     * @see #getLastSuccessfulBuild
-     */
-    @SuppressWarnings(UNUSED)
-    @CheckForNull
-    @Exported
-    public Run getLastUnstableBuild() {
-        Run retVal = null;
-        for (Job job : getAllJobs()) {
-            retVal = takeLast(retVal, job.getLastUnstableBuild());
-        }
-        return retVal;
-    }
-
-    /**
-     * Returns the last stable build, if any. Otherwise null.
-     *
-     * @return the build or null
-     * @see #getLastSuccessfulBuild
-     */
-    @SuppressWarnings(UNUSED)
-    @CheckForNull
-    @Exported
-    public Run getLastStableBuild() {
-        Run retVal = null;
-        for (Job job : getAllJobs()) {
-            retVal = takeLast(retVal, job.getLastStableBuild());
-        }
-        return retVal;
-    }
-
-    /**
-     * Returns the last failed build, if any. Otherwise null.
-     *
-     * @return the build or null
-     */
-    @SuppressWarnings(UNUSED)
-    @CheckForNull
-    @Exported
-    public Run getLastFailedBuild() {
-        Run retVal = null;
-        for (Job job : getAllJobs()) {
-            retVal = takeLast(retVal, job.getLastFailedBuild());
-        }
-        return retVal;
-    }
-
-    /**
-     * Returns the last completed build, if any. Otherwise null.
-     *
-     * @return the build or null
-     */
-    @SuppressWarnings(UNUSED)
-    @CheckForNull
-    @Exported
-    public Run getLastCompletedBuild() {
-        Run retVal = null;
-        for (Job job : getAllJobs()) {
-            retVal = takeLast(retVal, job.getLastCompletedBuild());
-        }
-        return retVal;
-    }
-
-    @CheckForNull
-    private Run takeLast(Run run1, Run run2) {
-        if (run2 != null && (run1 == null || run2.getTimestamp().after(run1.getTimestamp()))) {
-            return run2;
-        }
-        return run1;
-    }
 
     @Override
     public boolean isBuildable() {

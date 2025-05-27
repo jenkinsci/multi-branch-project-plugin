@@ -35,6 +35,7 @@ import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMEvents;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.impl.mock.MockSCMController;
+import jenkins.scm.impl.mock.MockSCMDiscoverBranches;
 import jenkins.scm.impl.mock.MockSCMHeadEvent;
 import jenkins.scm.impl.mock.MockSCMSource;
 import org.apache.commons.io.FileUtils;
@@ -68,7 +69,7 @@ public class FreeStyleMultiBranchProjectTest {
         try (MockSCMController c = MockSCMController.create()) {
             c.createRepository("foo");
             FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(c, "foo", new MockSCMDiscoverBranches())));
             r.waitUntilNoActivity();
             assertThat("Adding sources doesn't trigger indexing",
                     prj.getItems(), is((Collection<FreeStyleProject>) Collections.<FreeStyleProject>emptyList()));
@@ -80,7 +81,7 @@ public class FreeStyleMultiBranchProjectTest {
         try (MockSCMController c = MockSCMController.create()) {
             c.createRepository("foo");
             FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(c, "foo", new MockSCMDiscoverBranches())));
             prj.scheduleBuild2(0).getFuture().get();
             r.waitUntilNoActivity();
             assertThat("We now have branches",
@@ -99,7 +100,7 @@ public class FreeStyleMultiBranchProjectTest {
             c.createRepository("foo");
             c.cloneBranch("foo", "master", "feature/jenkins-41867");
             FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(c, "foo", new MockSCMDiscoverBranches())));
             prj.scheduleBuild2(0).getFuture().get();
             r.waitUntilNoActivity();
             System.out.println(FileUtils.readFileToString(prj.getIndexing().getLogFile()));
@@ -119,7 +120,7 @@ public class FreeStyleMultiBranchProjectTest {
         try (MockSCMController c = MockSCMController.create()) {
             c.createRepository("foo");
             FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(c, "foo", new MockSCMDiscoverBranches())));
             fire(new MockSCMHeadEvent("given_multibranchWithSources_when_matchingEvent_then_branchesAreFoundAndBuilt", SCMEvent.Type.UPDATED, c, "foo", "master", "junkHash"));
             assertThat("We now have branches",
                     prj.getItems(), not(is((Collection<FreeStyleProject>) Collections.<FreeStyleProject>emptyList())));
@@ -137,7 +138,7 @@ public class FreeStyleMultiBranchProjectTest {
         try (MockSCMController c = MockSCMController.create()) {
             c.createRepository("foo");
             FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(c, "foo", new MockSCMDiscoverBranches())));
             prj.scheduleBuild2(0).getFuture().get();
             r.waitUntilNoActivity();
             assertThat("We now have branches",
@@ -155,7 +156,7 @@ public class FreeStyleMultiBranchProjectTest {
         try (MockSCMController c = MockSCMController.create()) {
             c.createRepository("foo");
             FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(c, "foo", new MockSCMDiscoverBranches())));
             prj.scheduleBuild2(0).getFuture().get();
             r.waitUntilNoActivity();
             assertThat("We now have branches",
@@ -179,7 +180,7 @@ public class FreeStyleMultiBranchProjectTest {
         try (MockSCMController c = MockSCMController.create()) {
             c.createRepository("foo");
             FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(c, "foo", new MockSCMDiscoverBranches())));
             prj.scheduleBuild2(0).getFuture().get();
             r.waitUntilNoActivity();
             assertThat("We now have branches",
@@ -198,7 +199,7 @@ public class FreeStyleMultiBranchProjectTest {
         try (MockSCMController c = MockSCMController.create()) {
             c.createRepository("foo");
             FreeStyleMultiBranchProject prj = r.jenkins.createProject(FreeStyleMultiBranchProject.class, "foo");
-            prj.getSourcesList().add(new BranchSource(new MockSCMSource(null, c, "foo", true, false, false)));
+            prj.getSourcesList().add(new BranchSource(new MockSCMSource(c, "foo", new MockSCMDiscoverBranches())));
             prj.scheduleBuild2(0).getFuture().get();
             r.waitUntilNoActivity();
             assertThat("We now have branches",

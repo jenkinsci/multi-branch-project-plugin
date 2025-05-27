@@ -29,10 +29,10 @@ import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.RequestImpl;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * Prevents configuration of {@link TemplateDrivenMultiBranchProject}s from bleeding into their template projects
@@ -44,11 +44,11 @@ import javax.servlet.ServletException;
 public final class TemplateStaplerRequestWrapper extends RequestImpl {
     /**
      * Constructs this extension of {@link RequestImpl} under the assumption that {@link RequestImpl} is also the
-     * underlying type of the {@link StaplerRequest}.
+     * underlying type of the {@link StaplerRequest2}.
      *
      * @param request the request submitted the {@link TemplateDrivenMultiBranchProject}
      */
-    TemplateStaplerRequestWrapper(StaplerRequest request) {
+    TemplateStaplerRequestWrapper(StaplerRequest2 request) {
         /*
          * Ugly casts to RequestImpl... but should be ok since it will throw
          * errors, which we want anyway if it's not that type.
